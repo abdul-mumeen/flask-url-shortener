@@ -3,6 +3,7 @@ import os
 import dotenv
 
 dotenv.load()
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
@@ -17,15 +18,21 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = dotenv.get('DEV_DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = dotenv.get('DEV_DATABASE_URL').format(basedir)
 
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = dotenv.get('TEST_DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = dotenv.get('TEST_DATABASE_URL').format(basedir)
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = dotenv.get('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = dotenv.get('DATABASE_URL').format(basedir)
 
-config = {    'development': DevelopmentConfig,    'testing': TestingConfig,    'production': ProductionConfig,    'default': DevelopmentConfig}
+
+config = {
+    'development': DevelopmentConfig,
+    'testing': TestingConfig,
+    'production': ProductionConfig,
+    'default': DevelopmentConfig
+}
