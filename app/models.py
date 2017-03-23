@@ -8,7 +8,7 @@ import json
 
 visits = db.Table('visits',
                   db.Column('visitor_id', db.Integer, db.ForeignKey('visitors.visitor_id')),
-                  db.Column('url_id', db.Integer, db.ForeignKey('urls.url_id'))
+                  db.Column('short_url_id', db.Integer, db.ForeignKey('short_urls.short_url_id'))
                   )
 
 
@@ -19,7 +19,10 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(30), index=True)
     email = db.Column(db.String(64), unique=True)
     password_hash = db.Column(db.String(128))
-    urls = db.relationship('Url', backref='user')
+    short_urls = db.relationship('ShortUrl', backref='user')
+
+    def get_id(self):
+        return self.user_id
 
     @property
     def password(self):
@@ -53,14 +56,14 @@ class User(UserMixin, db.Model):
         return '<User %r>' % self.first_name + " " + self.last_name
 
 
-class Url(db.Model):
-    __tablename__ = 'urls'
-    url_id = db.Column(db.Integer, primary_key=True)
+class ShortUrl(db.Model):
+    __tablename__ = 'short_urls'
+    short_url_id = db.Column(db.Integer, primary_key=True)
     short_url = db.Column(db.String(64), unique=True)
-    long_url = db.Column(db.Text, index=True)
     active = db.Column(db.Integer, index=True, default=1)
     deleted = db.Column(db.Integer, default=0)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
+    long_url_id = db.Column(db.Integer, db.ForeignKey('long_urls.long_url_id'))
 
     def save(self):
         db.session.add(self)
@@ -70,14 +73,28 @@ class Url(db.Model):
         return '<Url %r>' % self.short_url
 
 
+class LongUrl(db.Model):
+    __tablename__ = 'long_urls'
+    long_url_id = db.Column(db.Integer, primary_key=True)
+    long_url = db.Column(db.Text, index=True)
+    short_urls = db.relationship('ShortUrl', backref='long_url')
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def __repr__(self):
+        return '<Url %r>' % self.long_url
+
+
 class Visitor(db.Model):
     __tablename__ = 'visitors'
     visitor_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     email = db.Column(db.String(64), index=True)
-    urls = db.relationship('Url', secondary=visits,
-                           backref=db.backref('visitors', lazy='dynamic'),
-                           lazy='dynamic')
+    short_urls = db.relationship('ShortUrl', secondary=visits,
+                                 backref=db.backref('visitors', lazy='dynamic'),
+                                 lazy='dynamic')
 
     def save(self):
         db.session.add(self)
