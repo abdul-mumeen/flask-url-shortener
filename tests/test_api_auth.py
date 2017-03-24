@@ -4,6 +4,7 @@ from flask import current_app, url_for
 from app.models import ShortUrl, LongUrl, User, Visitor
 from base64 import b64encode
 import json
+from authentication
 
 
 class ApiAuthTestCase(unittest.TestCase):
@@ -32,7 +33,7 @@ class ApiAuthTestCase(unittest.TestCase):
                     email='abdulmumeen.olasode@andela.com', password='hassan')
         user.save()
         header = self.get_api_headers('abdulmumeen.olasode@andela.com', 'hassan')
-        response = self.client.post(url_for('api.get_token'), headers=header)
+        response = self.client.get(url_for('api.get_token'), headers=header)
         token = response.get_data('token')
         self.assertTrue(token)
         self.assertEqual(response.status_code, 200)
@@ -42,14 +43,14 @@ class ApiAuthTestCase(unittest.TestCase):
                     email='abdulmumeen.olasode@andela.com', password='hassan')
         user.save()
         header = self.get_api_headers('abdulmeen.olasode@andela.com', 'hassan')
-        response = self.client.post(url_for('api.get_token'), headers=header)
+        response = self.client.get(url_for('api.get_token'), headers=header)
         message = json.loads(response.data)['message']
         self.assertEqual(message, 'Invalid credentials')
         self.assertEqual(response.status_code, 401)
 
     def test_get_token_no_auth(self):
         header = self.get_api_headers('', '')
-        response = self.client.post(url_for('api.get_token'), headers=header)
+        response = self.client.get(url_for('api.get_token'), headers=header)
         message = json.loads(response.data)['message']
         self.assertEqual(message, 'Supply a username and password')
         self.assertEqual(response.status_code, 403)
@@ -66,3 +67,42 @@ class ApiAuthTestCase(unittest.TestCase):
         message = json.loads(response.data)['message']
         self.assertEqual(message, 'User creation successful')
         self.assertEqual(response.status_code, 200)
+
+    def test_register_missing_fields(self):
+        user_data = {'email': 'me@andela.com', 'first_name': 'Adedoyin',
+                     'last_name': '', 'password': 'prank',
+                     'confirm_password': 'prank'
+                     }
+        header = {'Content-Type': 'application/json'}
+
+        response = self.client.post(url_for('api.register_user'),
+                                    data=json.dumps(user_data), headers=header)
+        message = json.loads(response.data)['message']
+        self.assertIn('This field is required.', message)
+        self.assertEqual(response.status_code, 403)
+
+    def test_register_invalid_email(self):
+        user_data = {'email': 'meandela.com', 'first_name': 'Adedoyin',
+                     'last_name': 'Fujitsu', 'password': 'prank',
+                     'confirm_password': 'prank'
+                     }
+        header = {'Content-Type': 'application/json'}
+
+        response = self.client.post(url_for('api.register_user'),
+                                    data=json.dumps(user_data), headers=header)
+        message = json.loads(response.data)['message']
+        self.assertIn('Invalid email address.', message)
+        self.assertEqual(response.status_code, 403)
+
+    def test_register_not_matching_password(self):
+        user_data = {'email': 'me@andela.com', 'first_name': 'Adedoyin',
+                     'last_name': 'Fujitsu', 'password': 'prak',
+                     'confirm_password': 'prank'
+                     }
+        header = {'Content-Type': 'application/json'}
+
+        response = self.client.post(url_for('api.register_user'),
+                                    data=json.dumps(user_data), headers=header)
+        message = json.loads(response.data)['message']
+        self.assertIn('Password must match', message)
+        self.assertEqual(response.status_code, 403)
