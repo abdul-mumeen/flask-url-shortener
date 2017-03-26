@@ -15,7 +15,7 @@ basic_auth = HTTPBasicAuth()
 def before_request():
     if (g.current_user.is_anonymous
             and not set(request.path.split('/'))
-            .intersection(set(['token', 'register']))):
+            .intersection(set(['token', 'register', 'shorten']))):
         return unauthorized('Invalid credentials')
 
 
@@ -48,14 +48,19 @@ def get_token():
 
 
 def get_user_token(user):
-    return jsonify({'token': str(user.generate_auth_token(expiration=3600)),
+    return jsonify({'token': user.generate_auth_token(expiration=3600).decode('utf-8'),
                     'expiration': 3600})
 
 
 @auth.verify_token
 def verify_token(token):
     if token == '':
-        g.current_user = AnonymousUserMixin()
+        g.current_user = User.query.filter_by(
+            email='anonymous@anonymous.com').first()
+        if not g.current_user:
+            g.current_user = User(
+                first_name='anonymous', last_name='anonymous', anonymous=True,
+                email='anonymous@anonymous.com', password='anonymous')
         return True
     g.current_user = User.verify_auth_token(token)
     return g.current_user is not None
@@ -64,7 +69,12 @@ def verify_token(token):
 @basic_auth.verify_password
 def verify_password(email, password):
     if email == '':
-        g.current_user = AnonymousUserMixin()
+        g.current_user = User.query.filter_by(
+            email='anonymous@anonymous.com').first()
+        if not g.current_user:
+            g.current_user = User(
+                first_name='anonymous', last_name='anonymous', anonymous=True,
+                email='anonymous@anonymous.com', password='anonymous')
         return True
     user = User.query.filter_by(email=email).first()
     if not user:
