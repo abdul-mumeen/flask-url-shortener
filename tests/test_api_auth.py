@@ -4,7 +4,6 @@ from flask import current_app, url_for
 from app.models import ShortUrl, LongUrl, User, Visitor
 from base64 import b64encode
 import json
-from authentication
 
 
 class ApiAuthTestCase(unittest.TestCase):
