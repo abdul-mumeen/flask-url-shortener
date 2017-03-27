@@ -54,13 +54,14 @@ def get_user_token(user):
 
 @auth.verify_token
 def verify_token(token):
-    if token == '':
+    if not token:
         g.current_user = User.query.filter_by(
             email='anonymous@anonymous.com').first()
         if not g.current_user:
             g.current_user = User(
                 first_name='anonymous', last_name='anonymous', anonymous=True,
                 email='anonymous@anonymous.com', password='anonymous')
+        g.current_user.anonymous = True
         return True
     g.current_user = User.verify_auth_token(token)
     return g.current_user is not None
@@ -68,13 +69,14 @@ def verify_token(token):
 
 @basic_auth.verify_password
 def verify_password(email, password):
-    if email == '':
+    if not email:
         g.current_user = User.query.filter_by(
             email='anonymous@anonymous.com').first()
         if not g.current_user:
             g.current_user = User(
                 first_name='anonymous', last_name='anonymous', anonymous=True,
                 email='anonymous@anonymous.com', password='anonymous')
+        g.current_user.anonymous = True
         return True
     user = User.query.filter_by(email=email).first()
     if not user:
