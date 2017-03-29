@@ -70,7 +70,7 @@ class ModelTestCase(unittest.TestCase):
         db.session.commit()
         self.assertEqual(short_url.long_url.long_url, 'www.edurance.com/blogpost/1234')
         self.assertEqual(short_url_2.long_url.long_url, 'www.edurance.com/blogpost/1234')
-        self.assertEqual(len(long_url.short_urls), 2)
+        self.assertEqual(len(long_url.short_urls.all()), 2)
         self.assertEqual(long_url.short_urls[1].short_url, 'www.fus.ly/TY65as')
         self.assertEqual(long_url.short_urls[0].short_url, 'www.fus.ly/hGy87T')
         new_short_url = ShortUrl.query.filter_by(short_url_id=2).first()
