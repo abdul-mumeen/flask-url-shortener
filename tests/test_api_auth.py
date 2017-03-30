@@ -38,9 +38,6 @@ class ApiAuthTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_get_token_invalid_auth(self):
-        user = User(first_name='Abdul-Mumeen', last_name='Olasode',
-                    email='abdulmumeen.olasode@andela.com', password='hassan')
-        user.save()
         header = self.get_api_headers('abdulmeen.olasode@andela.com', 'hassan')
         response = self.client.get(url_for('api.get_token'), headers=header)
         message = json.loads(response.data)['message']

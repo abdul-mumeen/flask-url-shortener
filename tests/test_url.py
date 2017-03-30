@@ -41,14 +41,66 @@ class UrlTestCase(unittest.TestCase):
         user.save()
         header = self.get_username_headers('abdulmumeen.olasode@andela.com', 'hassan')
         response = self.client.get(url_for('api.get_token'), headers=header)
-        return response.get_data('token')
+        return json.loads(response.data)['token']
 
     def test_anonymous_shorten_url(self):
-        data = {'long_url': 'https://www.google.com'}
-        response = self.client.get(url_for('api.shorten'),
-                                   headers=self.headers, data=data)
-        short_url = response.get_data('message')
-        success = response.get_data('success')
+        response = self.anonymous_shorten_url('https://www.google.com', '')
+        short_url = response['message']
+        success = response['success']
         self.assertTrue(short_url)
-        self.assertIn('http://www.fus.ly/', message)
+        self.assertIn('http://www.fus.ly/', short_url)
         self.assertTrue(success)
+
+    def test_anonymous_shorten_vanity_url(self):
+        response = self.anonymous_shorten_url('https://www.google.com', 'go')
+        self.assertEqual(response['message'], 'Invalid credentials')
+        self.assertEqual(response['error'], 'unauthorized')
+
+    def anonymous_shorten_url(self, url, vanity):
+        data = json.dumps({'long_url': url,
+                           'vanity': vanity})
+        headers = {'Content-Type': 'application/json'}
+        response = self.client.post(url_for('api.shorten'),
+                                    data=data, headers=headers)
+        return json.loads(response.data)
+
+    def user_shorten_url(self, url, vanity):
+        data = json.dumps({'long_url': url, 'vanity': vanity})
+        response = self.client.post(url_for('api.shorten'),
+                                    data=data, headers=self.headers)
+        return json.loads(response.data)
+
+    def test_anonymous_shorten_same_url(self):
+        short_url = self.anonymous_shorten_url('https://www.google.com', '')
+        short_url_2 = self.anonymous_shorten_url('https://www.google.com', '')
+        self.assertEqual(short_url_2['message'], short_url['message'])
+
+    def test_reg_user_shorten_url(self):
+        response = self.user_shorten_url('https://www.google.com', '')
+        success = response['success']
+        short_url = response['message']
+        self.assertTrue(short_url)
+        self.assertIn('http://www.fus.ly/', short_url)
+        self.assertTrue(success)
+
+    def test_reg_user_shorten_same_url(self):
+        response = self.user_shorten_url('https://www.google.com', '')
+        short_url_1 = response['message']
+        response = self.user_shorten_url('https://www.google.com', '')
+        short_url_2 = response['message']
+        self.assertEqual(short_url_1, short_url_2)
+
+    def test_reg_user_shorten_vanity_url(self):
+        response = self.user_shorten_url('https://www.google.com', 'goo')
+        short_url = response['message']
+        self.assertEqual(short_url, 'http://www.fus.ly/goo')
+
+    def test_update_long_url(self):
+        response = self.user_shorten_url('https://www.google.com', '')
+        short_url_1 = response['message']
+        response = self.anonymous_shorten_url('https://www.google.com', '')
+        short_url_2 = response['message']
+        self.assertNotEqual(short_url_1, short_url_2)
+        count = len(LongUrl.query.filter_by(
+            long_url='https://www.google.com').all())
+        self.assertEqual(count, 1)
