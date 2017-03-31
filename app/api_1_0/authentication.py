@@ -15,7 +15,7 @@ basic_auth = HTTPBasicAuth()
 def before_request():
     if (g.current_user.is_anonymous
             and not set(request.path.split('/'))
-            .intersection(set(['token', 'register', 'shorten']))):
+            .intersection(set(['token', 'register', 'shorten', 'recent']))):
         return unauthorized('Invalid credentials')
 
 
