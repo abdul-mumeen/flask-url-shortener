@@ -4,6 +4,7 @@ from flask import g, jsonify, request, abort
 from .authentication import auth
 from .errors import not_found, forbidden, unauthorized
 from .validators import ValidateLongUrl
+
 import random
 import string
 import dotenv
@@ -79,13 +80,13 @@ def get_vanity_url(vanity):
 
 @api.route('/shorturl/recent', methods=['GET'])
 def most_recent():
-    recent_urls = ShortUrl.query.order_by(date_time).limit(5).all()
+    recent_urls = ShortUrl.query.order_by('date_time desc').limit(5).all()
     if recent_urls:
-        urls = None
+        urls = []
         for i in range(len(recent_urls)):
-            urls[i + 1] = {'short_url': recent_urls[i].short_url,
-                           'short_url_url': recent_urls[i].short_url_id
-                           }
+            urls.append({'short_url': recent_urls[i].short_url,
+                         'short_url_url': recent_urls[i].short_url_id
+                         })
         return jsonify({'success': True, 'message': urls})
     return not_found('No url found')
 

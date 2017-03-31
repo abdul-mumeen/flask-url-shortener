@@ -104,3 +104,17 @@ class UrlTestCase(unittest.TestCase):
         count = len(LongUrl.query.filter_by(
             long_url='https://www.google.com').all())
         self.assertEqual(count, 1)
+
+    def test_most_recent_urls(self):
+        response = self.client.get(url_for('api.most_recent'))
+        message = json.loads(response.data)['message']
+        self.assertEqual(message, 'No url found')
+        self.assertEqual(response.status_code, 404)
+        response = self.user_shorten_url('https://www.google.com', '')
+        short_url_1 = response['message']
+        response = self.anonymous_shorten_url('https://www.google.com', '')
+        short_url_2 = response['message']
+        response = self.client.get(url_for('api.most_recent'))
+        message = json.loads(response.data)['message']
+        self.assertEqual(message[0]['short_url'], short_url_2)
+        self.assertEqual(message[1]['short_url'], short_url_1)
