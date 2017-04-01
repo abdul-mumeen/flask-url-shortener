@@ -1,9 +1,10 @@
-import unittest
-from app import create_app, db
-from flask import current_app, url_for
-from app.models import ShortUrl, LongUrl, User, Visitor
-from base64 import b64encode
 import json
+import unittest
+from base64 import b64encode
+
+from app import create_app, db
+from app.models import LongUrl, ShortUrl, User, Visitor
+from flask import current_app, url_for
 
 
 class UrlTestCase(unittest.TestCase):
@@ -13,7 +14,6 @@ class UrlTestCase(unittest.TestCase):
         self.app_context.push()
         db.create_all()
         self.client = self.app.test_client(use_cookies=True)
-        self.headers = self.get_token_headers(self.get_token())
 
     def tearDown(self):
         db.session.remove()
@@ -35,11 +35,13 @@ class UrlTestCase(unittest.TestCase):
             'Content-Type': 'application/json'
         }
 
-    def get_token(self):
-        user = User(first_name='Abdul-Mumeen', last_name='Olasode',
-                    email='abdulmumeen.olasode@andela.com', password='hassan')
+    def register_user(self, f_name, l_name, email, password):
+        user = User(first_name=f_name, last_name=l_name,
+                    email=email, password=password)
         user.save()
-        header = self.get_username_headers('abdulmumeen.olasode@andela.com', 'hassan')
+
+    def get_token(self, email, password):
+        header = self.get_username_headers(email, password)
         response = self.client.get(url_for('api.get_token'), headers=header)
         return json.loads(response.data)['token']
 
@@ -64,10 +66,11 @@ class UrlTestCase(unittest.TestCase):
                                     data=data, headers=headers)
         return json.loads(response.data)
 
-    def user_shorten_url(self, url, vanity):
+    def user_shorten_url(self, url, vanity, email, password):
         data = json.dumps({'long_url': url, 'vanity': vanity})
+        headers = self.get_token_headers(self.get_token(email, password))
         response = self.client.post(url_for('api.shorten'),
-                                    data=data, headers=self.headers)
+                                    data=data, headers=headers)
         return json.loads(response.data)
 
     def test_anonymous_shorten_same_url(self):
@@ -76,7 +79,10 @@ class UrlTestCase(unittest.TestCase):
         self.assertEqual(short_url_2['message'], short_url['message'])
 
     def test_reg_user_shorten_url(self):
-        response = self.user_shorten_url('https://www.google.com', '')
+        self.register_user('Abdul-Mumeen', 'Olasode',
+                           'abdulmumeen.olasode@andela.com', 'hassan')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'abdulmumeen.olasode@andela.com', 'hassan')
         success = response['success']
         short_url = response['message']
         self.assertTrue(short_url)
@@ -84,21 +90,45 @@ class UrlTestCase(unittest.TestCase):
         self.assertTrue(success)
 
     def test_reg_user_shorten_same_url(self):
-        response = self.user_shorten_url('https://www.google.com', '')
+        self.register_user('Abdul-Mumeen', 'Olasode',
+                           'abdulmumeen.olasode@andela.com', 'hassan')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'abdulmumeen.olasode@andela.com', 'hassan')
         short_url_1 = response['message']
-        response = self.user_shorten_url('https://www.google.com', '')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'abdulmumeen.olasode@andela.com', 'hassan')
         short_url_2 = response['message']
         self.assertEqual(short_url_1, short_url_2)
 
     def test_reg_user_shorten_vanity_url(self):
-        response = self.user_shorten_url('https://www.google.com', 'goo')
+        self.register_user('Abdul-Mumeen', 'Olasode',
+                           'abdulmumeen.olasode@andela.com', 'hassan')
+        response = self.user_shorten_url('https://www.google.com', 'goo',
+                                         'abdulmumeen.olasode@andela.com', 'hassan')
         short_url = response['message']
         self.assertEqual(short_url, 'http://www.fus.ly/goo')
 
+    def test_reg_user_shorten_same_vanity_url(self):
+        self.register_user('Abdul-Mumeen', 'Olasode',
+                           'abdulmumeen.olasode@andela.com', 'hassan')
+        response = self.user_shorten_url('https://www.google.com', 'goo',
+                                         'abdulmumeen.olasode@andela.com',
+                                         'hassan')
+        self.register_user('Angula', 'Node', 'angular@node.com', 'python')
+        response = self.user_shorten_url('https://www.google.com', 'goo',
+                                         'angular@node.com', 'python')
+        self.assertEqual(response['message'],
+                         "Vanity string 'goo' has been taken")
+
     def test_update_long_url(self):
-        response = self.user_shorten_url('https://www.google.com', '')
+        self.register_user('Abdul-Mumeen', 'Olasode',
+                           'abdulmumeen.olasode@andela.com', 'hassan')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'abdulmumeen.olasode@andela.com', 'hassan')
         short_url_1 = response['message']
-        response = self.anonymous_shorten_url('https://www.google.com', '')
+        self.register_user('Angula', 'Node', 'angular@node.com', 'python')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'angular@node.com', 'python')
         short_url_2 = response['message']
         self.assertNotEqual(short_url_1, short_url_2)
         count = len(LongUrl.query.filter_by(
@@ -110,11 +140,53 @@ class UrlTestCase(unittest.TestCase):
         message = json.loads(response.data)['message']
         self.assertEqual(message, 'No url found')
         self.assertEqual(response.status_code, 404)
-        response = self.user_shorten_url('https://www.google.com', '')
+        self.register_user('Abdul-Mumeen', 'Olasode',
+                           'abdulmumeen.olasode@andela.com', 'hassan')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'abdulmumeen.olasode@andela.com', 'hassan')
         short_url_1 = response['message']
-        response = self.anonymous_shorten_url('https://www.google.com', '')
+        self.register_user('Angula', 'Node', 'angular@node.com', 'python')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'angular@node.com', 'python')
         short_url_2 = response['message']
         response = self.client.get(url_for('api.most_recent'))
         message = json.loads(response.data)['message']
         self.assertEqual(message[0]['short_url'], short_url_2)
         self.assertEqual(message[1]['short_url'], short_url_1)
+
+    def test_deactivate_url(self):
+        self.register_user('Angula', 'Node', 'angular@node.com', 'python')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'angular@node.com', 'python')
+        short_url_url = response['short_url_url']
+        response = self.client.put(short_url_url + '/deactivate/')
+        message = json.loads(response.data)['message']
+        self.assertEqual(message, 'Invalid credentials')
+        headers = self.get_token_headers(
+            self.get_token('angular@node.com', 'python'))
+        response = self.client.put(
+            short_url_url + '/deactivate/', headers=headers)
+        message = json.loads(response.data)['message']
+        self.assertEqual(message, short_url_url)
+        self.assertIs(response.status_code, 200)
+        # Include testing response when deactivated url is called
+
+    def test_activate_url(self):
+        self.register_user('Angula', 'Node', 'angular@node.com', 'python')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'angular@node.com', 'python')
+        short_url_url = response['short_url_url']
+        self.register_user('flask', 'django', 'flask@django.com', 'numpy')
+        headers = self.get_token_headers(
+            self.get_token('flask@django.com', 'numpy'))
+        response = self.client.put(short_url_url + '/activate/')
+        message = json.loads(response.data)['message']
+        self.assertEqual(message, 'Invalid credentials')
+        headers = self.get_token_headers(
+            self.get_token('angular@node.com', 'python'))
+        response = self.client.put(
+            short_url_url + '/activate/', headers=headers)
+        message = json.loads(response.data)['message']
+        self.assertEqual(message, short_url_url)
+        self.assertIs(response.status_code, 200)
+        # Include testing response when deactivated url is called
