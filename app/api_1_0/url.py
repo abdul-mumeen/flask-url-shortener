@@ -30,7 +30,7 @@ def shorten():
                             'message2': 'Url shortened before'})
         if short_url:
             return jsonify({'success': True, 'message': short_url.short_url,
-                            'short_url_url': url_for('api.shorturl',
+                            'short_url_url': url_for('api.shorturls',
                                                      _external=True)
                             + str(short_url.short_url_id)})
         new_short_url = get_short_url()
@@ -44,7 +44,7 @@ def update_new_short_url(new_short_url, long_url):
     g.current_user.short_urls.append(new_short_url)
     new_short_url.save()
     return jsonify({'success': True, 'message': new_short_url.short_url,
-                    'short_url_url': url_for('api.shorturl',
+                    'short_url_url': url_for('api.shorturls',
                                              _external=True)
                     + str(new_short_url.short_url_id)})
 
@@ -56,7 +56,7 @@ def add_new_short_url(new_short_url, long_url):
     g.current_user.short_urls.append(new_short_url)
     new_long_url.save()
     return jsonify({'success': True, 'message': new_short_url.short_url,
-                    'short_url_url': url_for('api.shorturl',
+                    'short_url_url': url_for('api.shorturls',
                                              _external=True)
                     + str(new_short_url.short_url_id)})
 
@@ -122,11 +122,64 @@ def toggle_url_activation(id, activate_or_deactivate):
         return not_found('No url with the id {}'.format(id))
     if short_url.user == g.current_user:
         short_url.activate = endpoint_map[activate_or_deactivate]
-        return jsonify({'success': True, 'message': url_for('api.shorturl',
+        return jsonify({'success': True, 'message': url_for('api.shorturls',
                                                             _external=True) + str(short_url.short_url_id)})
     return unauthorized('Invalid credentials')
 
 
-@api.route('/shorturl/')
-def shorturl():
-    pass
+@api.route('/shorturl/', methods=['GET'])
+def shorturls():
+    user_urls = ShortUrl.query.filter_by(user=g.current_user).all()
+    if user_urls:
+        urls = []
+        for i in range(len(user_urls)):
+            urls.append({'short_url': user_urls[i].short_url,
+                         'short_url_url': user_urls[i].short_url_id
+                         })
+        return jsonify({'success': True, 'message': urls})
+    return not_found('No url found for this user')
+
+
+@api.route('/shorturl/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+def shorturl(id):
+    request_mapping = {'GET': get_short_url_details,
+                       'DELETE': delete_short_url,
+                       'PUT': change_short_url_target}
+    url = ShortUrl.query.filter_by(user=g.current_user).filter_by(
+        short_url_id=id).filter_by(deleted=0).first()
+    if not url:
+        return not_found("No shortened url with id '{}'".format(id))
+    return request_mapping[request.method](id, url)
+
+
+def get_short_url_details(id, url):
+    url_details = {'url': url.short_url,
+                   'url_url': url_for('api.shorturls', _external=True)
+                   + str(url.short_url_id), 'visitor': url.visitors,
+                   'long_url': url.long_url, 'active': url.active}
+    return jsonify({'success': True, 'message': url_details})
+
+
+def delete_short_url(id, url):
+    count = len(ShortUrl.query.filter_by(long_url=url.long_url).all())
+    if count <= 1:
+        LongUrl.query.filter_by(long_url=url.long_url).delete()
+    url.deleted = 1
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'deleted'})
+
+
+def change_short_url_target(id, url):
+    long_url_input = ValidateLongUrl(request)
+    if not long_url_input.validate():
+        return forbidden(long_url_input.errors)
+    new_long_url = request.json.get('long_url')
+    count = len(ShortUrl.query.filter_by(long_url=url.long_url).all())
+    if count <= 1:
+        LongUrl.query.filter_by(long_url=url.long_url).delete()
+    new_long_url_check = LongUrl.query.filter_by(long_url=new_long_url).first()
+    if not new_long_url_check:
+        new_long_url_check = LongUrl(long_url=new_long_url)
+        new_long_url_check.save()
+    url.long_url = new_long_url_check
+    db.session.commit()
