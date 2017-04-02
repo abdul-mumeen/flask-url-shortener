@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import sys
 import unittest
 
 import coverage
@@ -9,6 +10,7 @@ from flask_migrate import MigrateCommand
 from flask_script import Manager, Shell
 
 dotenv.load()
+
 
 app = create_app(dotenv.get('FLASK_CONFIG') or 'default')
 manager = Manager(app)
@@ -20,21 +22,11 @@ def make_shell_context():
 
 
 @manager.command
-def test(coverage_check=False):
+def test(coverages=False, verbosity=1):
+    print(coverages, verbosity)
     """Run the unit tests with coverage when set to true."""
-    coverall = None
-    if coverage_check:
-        coverall = coverage.coverage(
-            branch=True, include='app/*')
-        coverall.start()
-    tests = unittest.TestLoader().discover('tests')
-    unittest.TextTestRunner(verbosity=2).run(tests)
-    if coverall:
-        coverall.stop()
-        coverall.save()
-        print('Coverage Summary:')
-        coverall.report(show_missing=True)
-        coverall.erase()
+    os.system('nosetests {} --cover-package=app '
+              '--verbosity={}'.format(('--with-coverage' * coverages), verbosity))
 
 
 manager.add_command("shell", Shell(make_context=make_shell_context))

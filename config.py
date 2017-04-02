@@ -10,6 +10,7 @@ class Config:
     SECRET_KEY = dotenv.get('SECRET_KEY')
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SERVER_NAME = 'localhost:5000'
 
     @staticmethod
     def init_app(app):
