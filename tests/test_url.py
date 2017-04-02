@@ -52,6 +52,8 @@ class UrlTestCase(unittest.TestCase):
         self.assertTrue(short_url)
         self.assertIn('http://www.fus.ly/', short_url)
         self.assertTrue(success)
+        response = self.anonymous_shorten_url('https://www.facebook.com', '')
+        self.assertTrue(response['success'])
 
     def test_anonymous_shorten_vanity_url(self):
         response = self.anonymous_shorten_url('https://www.google.com', 'go')
@@ -89,6 +91,13 @@ class UrlTestCase(unittest.TestCase):
         self.assertIn('http://www.fus.ly/', short_url)
         self.assertTrue(success)
 
+    def test_shorten_empty_url(self):
+        self.register_user('Abdul-Mumeen', 'Olasode',
+                           'abdulmumeen.olasode@andela.com', 'hassan')
+        response = self.user_shorten_url('', '',
+                                         'abdulmumeen.olasode@andela.com', 'hassan')
+        self.assertIn('This field is required.', response['message'])
+
     def test_reg_user_shorten_same_url(self):
         self.register_user('Abdul-Mumeen', 'Olasode',
                            'abdulmumeen.olasode@andela.com', 'hassan')
@@ -119,6 +128,10 @@ class UrlTestCase(unittest.TestCase):
                                          'angular@node.com', 'python')
         self.assertEqual(response['message'],
                          "Vanity string 'goo' has been taken")
+        response = self.user_shorten_url('https://www.google.com', 'goo',
+                                         'abdulmumeen.olasode@andela.com',
+                                         'hassan')
+        self.assertEqual(response['info'], 'Url shortened by you before')
 
     def test_update_long_url(self):
         self.register_user('Abdul-Mumeen', 'Olasode',
@@ -179,7 +192,8 @@ class UrlTestCase(unittest.TestCase):
         self.register_user('flask', 'django', 'flask@django.com', 'numpy')
         headers = self.get_token_headers(
             self.get_token('flask@django.com', 'numpy'))
-        response = self.client.put(short_url_url + '/activate/')
+        response = self.client.put(
+            short_url_url + '/activate/', headers=headers)
         message = json.loads(response.data)['message']
         self.assertEqual(message, 'Invalid credentials')
         headers = self.get_token_headers(
@@ -190,3 +204,118 @@ class UrlTestCase(unittest.TestCase):
         self.assertEqual(message, short_url_url)
         self.assertIs(response.status_code, 200)
         # Include testing response when deactivated url is called
+
+    def test_get_url_details(self):
+        self.register_user('Angula', 'Node', 'angular@node.com', 'python')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'angular@node.com', 'python')
+        short_url_url = response['short_url_url']
+        short_url = response['message']
+        headers = self.get_token_headers(
+            self.get_token('angular@node.com', 'python'))
+        response = self.client.get(
+            url_for('api.shorturl', id=1), headers=headers)
+        url_details = json.loads(response.data)['message']
+        self.assertEqual(url_details['url_url'], short_url_url)
+        self.assertEqual(url_details['url'], short_url)
+        self.assertEqual(url_details['long_url'], 'https://www.google.com')
+
+    def test_unauthorized_access_of_url(self):
+        self.register_user('Angula', 'Node', 'angular@node.com', 'python')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'angular@node.com', 'python')
+        self.register_user('flask', 'django', 'flask@django.com', 'numpy')
+        headers = self.get_token_headers(
+            self.get_token('flask@django.com', 'numpy'))
+        response = self.client.get(
+            url_for('api.shorturl', id=1), headers=headers)
+        self.assertEqual("No shortened url with id '1' found for you",
+                         json.loads(response.data)['message'])
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_user_urls(self):
+        self.register_user('flask', 'django', 'flask@django.com', 'numpy')
+        headers = self.get_token_headers(
+            self.get_token('flask@django.com', 'numpy'))
+        response = self.client.get(
+            url_for('api.shorturls'), headers=headers)
+        self.assertEqual(json.loads(response.data)[
+                         'message'], 'No shortened url found')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'flask@django.com', 'numpy')
+        response = self.client.get(
+            url_for('api.shorturls'), headers=headers)
+        self.assertTrue(type(json.loads(response.data)['message']) == list)
+        self.assertEqual(json.loads(response.data)[
+                         'message'][0]['long_url'],
+                         'https://www.google.com')
+
+    def test_delete_short_url(self):
+        self.register_user('Angula', 'Node', 'angular@node.com', 'python')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'angular@node.com', 'python')
+        headers = self.get_token_headers(
+            self.get_token('angular@node.com', 'python'))
+        response = self.client.get(
+            url_for('api.shorturl', id=1), headers=headers)
+        url_details = json.loads(response.data)['message']
+        self.assertEqual(url_details['long_url'], 'https://www.google.com')
+        response = self.client.delete(
+            url_for('api.shorturl', id=1), headers=headers)
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get(
+            url_for('api.shorturl', id=1), headers=headers)
+        message = json.loads(response.data)['message']
+        self.assertEqual(message, "No shortened url with id '1' found for you")
+        self.assertEqual(response.status_code, 404)
+        response = self.client.put(
+            url_for('api.activate_url', id=1), headers=headers)
+        self.assertEqual(response.status_code, 404)
+
+    def test_delete_short_url_sharing_long_url(self):
+        self.register_user('Angula', 'Node', 'angular@node.com', 'python')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'angular@node.com', 'python')
+        headers = self.get_token_headers(
+            self.get_token('angular@node.com', 'python'))
+        self.register_user('flask', 'django', 'flask@django.com', 'numpy')
+        headers_2 = self.get_token_headers(
+            self.get_token('flask@django.com', 'numpy'))
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'flask@django.com', 'numpy')
+        response = self.client.delete(
+            url_for('api.shorturl', id=1), headers=headers)
+        response = self.client.get(
+            url_for('api.shorturl', id=2), headers=headers_2)
+        url_details = json.loads(response.data)['message']
+        self.assertEqual(url_details['long_url'], 'https://www.google.com')
+
+    def test_change_url_target(self):
+        self.register_user('Angula', 'Node', 'angular@node.com', 'python')
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'angular@node.com', 'python')
+        headers = self.get_token_headers(
+            self.get_token('angular@node.com', 'python'))
+        data = json.dumps({'long_url': ''})
+        response = self.client.put(
+            url_for('api.shorturl', id=1), headers=headers, data=data)
+        message = json.loads(response.data)['message']
+        self.assertIn('This field is required.', message)
+        data = json.dumps({'long_url': 'https://www.facebook.com'})
+        response = self.client.put(
+            url_for('api.shorturl', id=1), headers=headers, data=data)
+        message = json.loads(response.data)['message']
+        self.assertEqual('updated', message)
+        self.assertEqual(response.status_code, 200)
+        self.register_user('flask', 'django', 'flask@django.com', 'numpy')
+        headers_2 = self.get_token_headers(
+            self.get_token('flask@django.com', 'numpy'))
+        response = self.user_shorten_url('https://www.google.com', '',
+                                         'flask@django.com', 'numpy')
+        response = self.user_shorten_url('https://www.facebook.com', '',
+                                         'flask@django.com', 'numpy')
+        data = json.dumps({'long_url': 'https://www.google.com'})
+        response = self.client.put(
+            url_for('api.shorturl', id=1), headers=headers, data=data)
+        message = json.loads(response.data)['message']
+        self.assertEqual('updated', message)

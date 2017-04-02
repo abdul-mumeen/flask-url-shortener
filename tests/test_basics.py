@@ -4,8 +4,7 @@ from app import create_app
 
 
 class BasicsTestCase(unittest.TestCase):
-
-    def create_test_app(self, environ):
+    def create_test_app(self, environ='testing'):
         app = create_app(environ)
         app_context = app.app_context()
         app_context.push()

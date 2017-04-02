@@ -1,9 +1,10 @@
-import unittest
-from app import create_app, db
-from flask import current_app, url_for
-from app.models import ShortUrl, LongUrl, User, Visitor
-from base64 import b64encode
 import json
+import unittest
+from base64 import b64encode
+
+from app import create_app, db
+from app.models import LongUrl, ShortUrl, User, Visitor
+from flask import current_app, url_for
 
 
 class ApiAuthTestCase(unittest.TestCase):
@@ -31,7 +32,8 @@ class ApiAuthTestCase(unittest.TestCase):
         user = User(first_name='Abdul-Mumeen', last_name='Olasode',
                     email='abdulmumeen.olasode@andela.com', password='hassan')
         user.save()
-        header = self.get_api_headers('abdulmumeen.olasode@andela.com', 'hassan')
+        header = self.get_api_headers(
+            'abdulmumeen.olasode@andela.com', 'hassan')
         response = self.client.get(url_for('api.get_token'), headers=header)
         token = response.get_data('token')
         self.assertTrue(token)
@@ -101,4 +103,19 @@ class ApiAuthTestCase(unittest.TestCase):
                                     data=json.dumps(user_data), headers=header)
         message = json.loads(response.data)['message']
         self.assertIn('Password must match', message)
+        self.assertEqual(response.status_code, 403)
+
+    def test_register_with_existing_email(self):
+        user_data = {'email': 'me@andela.com', 'first_name': 'Adedoyin',
+                     'last_name': 'Fujitsu', 'password': 'prank',
+                     'confirm_password': 'prank'
+                     }
+        header = {'Content-Type': 'application/json'}
+
+        response = self.client.post(url_for('api.register_user'),
+                                    data=json.dumps(user_data), headers=header)
+        response = self.client.post(url_for('api.register_user'),
+                                    data=json.dumps(user_data), headers=header)
+        message = json.loads(response.data)['message']
+        self.assertIn('Email already exist', message)
         self.assertEqual(response.status_code, 403)
