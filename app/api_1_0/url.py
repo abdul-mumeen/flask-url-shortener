@@ -7,6 +7,7 @@ from flask import abort, g, jsonify, request, url_for
 from sqlalchemy import desc
 
 from . import api
+from .. import db
 from .authentication import auth
 from .errors import forbidden, not_found, unauthorized
 from .validators import ValidateLongUrl
@@ -27,7 +28,7 @@ def shorten():
         if short_url and request.json.get('vanity'):
             return jsonify({'success': True,
                             'message': short_url.short_url,
-                            'message2': 'Url shortened before'})
+                            'info': 'Url shortened by you before'})
         if short_url:
             return jsonify({'success': True, 'message': short_url.short_url,
                             'short_url_url': url_for('api.shorturls',
@@ -122,8 +123,8 @@ def toggle_url_activation(id, activate_or_deactivate):
         return not_found('No url with the id {}'.format(id))
     if short_url.user == g.current_user:
         short_url.activate = endpoint_map[activate_or_deactivate]
-        return jsonify({'success': True, 'message': url_for('api.shorturls',
-                                                            _external=True) + str(short_url.short_url_id)})
+        return jsonify({'success': True, 'message': url_for(
+            'api.shorturls', _external=True) + str(short_url.short_url_id)})
     return unauthorized('Invalid credentials')
 
 
@@ -134,10 +135,11 @@ def shorturls():
         urls = []
         for i in range(len(user_urls)):
             urls.append({'short_url': user_urls[i].short_url,
-                         'short_url_url': user_urls[i].short_url_id
+                         'short_url_url': user_urls[i].short_url_id,
+                         'long_url': user_urls[i].long_url.long_url
                          })
         return jsonify({'success': True, 'message': urls})
-    return not_found('No url found for this user')
+    return not_found('No shortened url found')
 
 
 @api.route('/shorturl/<int:id>', methods=['GET', 'PUT', 'DELETE'])
@@ -148,22 +150,25 @@ def shorturl(id):
     url = ShortUrl.query.filter_by(user=g.current_user).filter_by(
         short_url_id=id).filter_by(deleted=0).first()
     if not url:
-        return not_found("No shortened url with id '{}'".format(id))
+        return not_found(
+            "No shortened url with id '{}' found for you".format(id))
     return request_mapping[request.method](id, url)
+
+# Add visitors details(urls maybe)
 
 
 def get_short_url_details(id, url):
     url_details = {'url': url.short_url,
                    'url_url': url_for('api.shorturls', _external=True)
-                   + str(url.short_url_id), 'visitor': url.visitors,
-                   'long_url': url.long_url, 'active': url.active}
+                   + str(url.short_url_id),
+                   'long_url': url.long_url.long_url, 'active': url.active}
     return jsonify({'success': True, 'message': url_details})
 
 
 def delete_short_url(id, url):
     count = len(ShortUrl.query.filter_by(long_url=url.long_url).all())
     if count <= 1:
-        LongUrl.query.filter_by(long_url=url.long_url).delete()
+        LongUrl.query.filter_by(long_url=url.long_url.long_url).delete()
     url.deleted = 1
     db.session.commit()
     return jsonify({'success': True, 'message': 'deleted'})
@@ -176,10 +181,11 @@ def change_short_url_target(id, url):
     new_long_url = request.json.get('long_url')
     count = len(ShortUrl.query.filter_by(long_url=url.long_url).all())
     if count <= 1:
-        LongUrl.query.filter_by(long_url=url.long_url).delete()
+        LongUrl.query.filter_by(long_url=url.long_url.long_url).delete()
     new_long_url_check = LongUrl.query.filter_by(long_url=new_long_url).first()
     if not new_long_url_check:
         new_long_url_check = LongUrl(long_url=new_long_url)
         new_long_url_check.save()
     url.long_url = new_long_url_check
     db.session.commit()
+    return jsonify({'success': True, 'message': 'updated'})
