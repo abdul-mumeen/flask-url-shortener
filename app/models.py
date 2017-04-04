@@ -1,15 +1,18 @@
-from flask import current_app, jsonify
-from werkzeug.security import generate_password_hash, check_password_hash
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from flask_login import UserMixin
-from . import db
 import json
 from datetime import datetime
 
+from flask import current_app, jsonify
+from flask_login import UserMixin
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from . import db
 
 visits = db.Table('visits',
-                  db.Column('visitor_id', db.Integer, db.ForeignKey('visitors.visitor_id')),
-                  db.Column('short_url_id', db.Integer, db.ForeignKey('short_urls.short_url_id'))
+                  db.Column('visitor_id', db.Integer,
+                            db.ForeignKey('visitors.visitor_id')),
+                  db.Column('short_url_id', db.Integer,
+                            db.ForeignKey('short_urls.short_url_id'))
                   )
 
 
@@ -35,7 +38,8 @@ class User(UserMixin, db.Model):
         raise AttributeError('password is not a readable attribute')
 
     def generate_auth_token(self, expiration):
-        s = Serializer(current_app.config['SECRET_KEY'],  expires_in=expiration)
+        s = Serializer(
+            current_app.config['SECRET_KEY'],  expires_in=expiration)
         return s.dumps({'user_id': self.user_id})
 
     @staticmethod
@@ -84,7 +88,8 @@ class LongUrl(db.Model):
     __tablename__ = 'long_urls'
     long_url_id = db.Column(db.Integer, primary_key=True)
     long_url = db.Column(db.Text, index=True)
-    short_urls = db.relationship('ShortUrl', backref='long_url', lazy='dynamic')
+    short_urls = db.relationship(
+        'ShortUrl', backref='long_url', lazy='dynamic')
 
     def save(self):
         db.session.add(self)
@@ -97,10 +102,12 @@ class LongUrl(db.Model):
 class Visitor(db.Model):
     __tablename__ = 'visitors'
     visitor_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64))
-    email = db.Column(db.String(64), index=True)
+    ip_address = db.Column(db.String(64))
+    browser = db.Column(db.String(64), index=True)
+    platform = db.Column(db.String(64), index=True)
     short_urls = db.relationship('ShortUrl', secondary=visits,
-                                 backref=db.backref('visitors', lazy='dynamic'),
+                                 backref=db.backref(
+                                     'visitors', lazy='dynamic'),
                                  lazy='dynamic')
 
     def save(self):

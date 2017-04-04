@@ -1,7 +1,7 @@
 import unittest
+
 from app import create_app, db
-from flask import current_app
-from app.models import ShortUrl, LongUrl, User, Visitor
+from app.models import LongUrl, ShortUrl, User, Visitor
 
 
 class ModelTestCase(unittest.TestCase):
@@ -38,7 +38,8 @@ class ModelTestCase(unittest.TestCase):
         self.assertEqual(url.long_url_id, 1)
 
     def test_add_visitor(self):
-        visitor = Visitor(name='Inguinal', email='inquinal@yahoo.com')
+        visitor = Visitor(ip_address='198.168.1.1', browser='mozilla',
+                          platform='windows')
         self.assertTrue(visitor)
         visitor.save()
         self.assertEqual(visitor.visitor_id, 1)
@@ -59,32 +60,38 @@ class ModelTestCase(unittest.TestCase):
         db.session.commit()
         self.assertEqual(url.user.first_name, 'Abdul-Mumeen')
         self.assertEqual(len(user.short_urls), 2)
-        self.assertEqual(user.short_urls[0].short_url, 'http://127.0.0.1/t3T1n9')
+        self.assertEqual(
+            user.short_urls[0].short_url, 'http://127.0.0.1/t3T1n9')
         self.assertEqual(user.short_urls[1].short_url, 'www.fus.ly/hGy87T')
 
     def test_shorturl_longurl_relationship(self):
         long_url = LongUrl(long_url='www.edurance.com/blogpost/1234')
         short_url = ShortUrl(short_url='www.fus.ly/hGy87T', long_url=long_url)
-        short_url_2 = ShortUrl(short_url='www.fus.ly/TY65as', long_url=long_url)
+        short_url_2 = ShortUrl(
+            short_url='www.fus.ly/TY65as', long_url=long_url)
         db.session.add_all([long_url, short_url, short_url_2])
         db.session.commit()
-        self.assertEqual(short_url.long_url.long_url, 'www.edurance.com/blogpost/1234')
-        self.assertEqual(short_url_2.long_url.long_url, 'www.edurance.com/blogpost/1234')
+        self.assertEqual(short_url.long_url.long_url,
+                         'www.edurance.com/blogpost/1234')
+        self.assertEqual(short_url_2.long_url.long_url,
+                         'www.edurance.com/blogpost/1234')
         self.assertEqual(len(long_url.short_urls.all()), 2)
         self.assertEqual(long_url.short_urls[1].short_url, 'www.fus.ly/TY65as')
         self.assertEqual(long_url.short_urls[0].short_url, 'www.fus.ly/hGy87T')
         new_short_url = ShortUrl.query.filter_by(short_url_id=2).first()
         self.assertTrue(new_short_url)
-        self.assertEqual(new_short_url.long_url.long_url, 'www.edurance.com/blogpost/1234')
+        self.assertEqual(new_short_url.long_url.long_url,
+                         'www.edurance.com/blogpost/1234')
 
     def test_url_vistor_relationship(self):
-        visitor = Visitor(name='Peter Pan', email='peter.pan@andela.com')
+        visitor = Visitor(ip_address='198.168.1.1', browser='mozilla',
+                          platform='windows')
         url = ShortUrl(short_url='www.fus.ly/hGy87T')
         visitor.short_urls.append(url)
         db.session.add_all([visitor, url])
         db.session.commit()
         self.assertEqual(len(list(url.visitors)), 1)
-        self.assertEqual(url.visitors[0].name, 'Peter Pan')
+        self.assertEqual(url.visitors[0].ip_address, '198.168.1.1')
 
     def test_generate_verify_token(self):
         user = User(first_name='Abdul-Mumeen', last_name='Olasode',
