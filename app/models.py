@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from flask import current_app, jsonify
+from flask import current_app, jsonify, url_for
 from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -113,6 +113,19 @@ class Visitor(db.Model):
     def save(self):
         db.session.add(self)
         db.session.commit()
+
+    def get_details(self):
+        details = {
+            'ip_address': self.ip_address,
+            'browser': self.browser,
+            'platform': self.platform,
+            'short_urls': [
+                url_for('api.shorturls', _external=True) +
+                str(short_url.short_url_id)
+                for short_url in self.short_urls
+            ]
+        }
+        return details
 
     def __repr__(self):
         return '<Visitor %r>' % self.name
