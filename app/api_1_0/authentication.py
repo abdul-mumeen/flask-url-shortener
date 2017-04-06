@@ -1,11 +1,14 @@
-from flask_login import AnonymousUserMixin
-from flask_httpauth import HTTPTokenAuth, HTTPBasicAuth
-from .errors import forbidden, unauthorized
-from . import api
+import json
+
 from app.models import User
 from flask import g, jsonify, request
+from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth
+from flask_login import AnonymousUserMixin
+
+from . import api
+from .errors import forbidden, unauthorized
 from .validators import RegisterInputs
-import json
+
 auth = HTTPTokenAuth(scheme='Token')
 basic_auth = HTTPBasicAuth()
 
@@ -15,7 +18,7 @@ basic_auth = HTTPBasicAuth()
 def before_request():
     if (g.current_user.is_anonymous
             and not set(request.path.split('/'))
-            .intersection(set(['token', 'register', 'shorten', 'recent']))):
+            .intersection(set(['token', 'register', 'shorten', 'recent', 'popular', 'visit']))):
         return unauthorized('Invalid credentials')
 
 
@@ -32,7 +35,8 @@ def register_user():
                 email=request_data.get('email'),
                 password=request_data.get('password'))
     user.save()
-    response = jsonify({'success': True, 'message': 'User creation successful'})
+    response = jsonify(
+        {'success': True, 'message': 'User creation successful'})
     response.status_code = 200
     return response
 
