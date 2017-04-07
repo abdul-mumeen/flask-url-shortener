@@ -391,13 +391,92 @@ class UrlTestCase(unittest.TestCase):
         headers = {'Content-Type': 'application/json'}
         data = json.dumps({'short_url': url_response['message']})
         response = self.client.post(
-            url_for('api.visit'), headers=headers, data=data)
+            url_for('api.visit'), headers=headers, data=data,
+            environ_base={'HTTP_USER_AGENT': 'Chrome, windows',
+                          'REMOTE_ADDR': '127.0.0.1'})
 
         response = self.client.get(
             url_for('api.visitor', id=1, vid=1), headers=header)
         visitor = json.loads(response.data)['visitor']
         self.assertIsInstance(visitor, dict)
         self.assertIsNotNone(visitor['ip_address'])
-        self.assertIsNotNone(visitor['browser'])
-        self.assertIsNotNone(visitor['platform'])
+        self.assertEqual(visitor['browser'], 'chrome')
+        self.assertEqual(visitor['platform'], 'windows')
         self.assertIsNotNone(visitor['short_urls'])
+
+    def test_get_visitors_with_invalid_id(self):
+        self.register_user('flask', 'django', 'flask@django.com', 'numpy')
+        header = self.get_token_headers(
+            self.get_token('flask@django.com', 'numpy'))
+        response = self.client.get(
+            url_for('api.visitors', id=1), headers=header)
+        message = json.loads(response.data)['message']
+        self.assertEqual(message, "No URL found with id '1'")
+        self.user_shorten_url('https://www.facebook.com', '',
+                              'flask@django.com', 'numpy')
+        response = self.client.get(
+            url_for('api.visitors', id=1), headers=header)
+        message = json.loads(response.data)['message']
+        self.assertEqual(message, "No visitor found for this URL")
+
+    def test_get_visitors_details(self):
+        self.register_user('flask', 'django', 'flask@django.com', 'numpy')
+        header = self.get_token_headers(
+            self.get_token('flask@django.com', 'numpy'))
+        url_response = self.user_shorten_url('https://www.facebook.com', '',
+                                             'flask@django.com', 'numpy')
+
+        headers = {'Content-Type': 'application/json'}
+        data = json.dumps({'short_url': url_response['message']})
+        response = self.client.post(
+            url_for('api.visit'), headers=headers, data=data,
+            environ_base={'HTTP_USER_AGENT': 'Chrome, windows',
+                          'REMOTE_ADDR': '127.0.0.1'})
+
+        response = self.client.get(
+            url_for('api.visitors', id=1), headers=header)
+
+        visitors = json.loads(response.data)['visitors']
+        self.assertIsInstance(visitors, list)
+        self.assertIsInstance(visitors[0], dict)
+        self.assertIsNotNone(visitors[0]['ip_address'])
+        self.assertIsNotNone(visitors[0]['browser'])
+        self.assertIsNotNone(visitors[0]['platform'])
+        self.assertIsNotNone(visitors[0]['short_urls'])
+
+    def test_popular_url(self):
+        self.register_user('flask', 'django', 'flask@django.com', 'numpy')
+        url_1_response = self.user_shorten_url('https://www.facebook.com', '',
+                                               'flask@django.com', 'numpy')
+        url_2_response = self.user_shorten_url('https://www.google.com', '',
+                                               'flask@django.com', 'numpy')
+
+        headers = {'Content-Type': 'application/json'}
+        data = json.dumps({'short_url': url_1_response['message']})
+        self.client.post(
+            url_for('api.visit'), headers=headers, data=data,
+            environ_base={'HTTP_USER_AGENT': 'Chrome, windows',
+                          'REMOTE_ADDR': '127.0.0.1'})
+        data = json.dumps({'short_url': url_2_response['message']})
+        self.client.post(
+            url_for('api.visit'), headers=headers, data=data,
+            environ_base={'HTTP_USER_AGENT': 'Chrome, windows',
+                          'REMOTE_ADDR': '127.0.0.1'})
+        data = json.dumps({'short_url': url_2_response['message']})
+        self.client.post(
+            url_for('api.visit'), headers=headers, data=data,
+            environ_base={'HTTP_USER_AGENT': 'Chrome, windows',
+                          'REMOTE_ADDR': '127.0.0.1'})
+        response = self.client.get(url_for('api.popular'), headers=headers)
+        popular_urls = json.loads(response.data)['popular_urls']
+        self.assertIsInstance(popular_urls, list)
+        self.assertEqual(
+            popular_urls[0]['short_url'], url_2_response['message'])
+        self.assertEqual(
+            popular_urls[1]['short_url'], url_1_response['message'])
+
+    def test_popular_with_no_url(self):
+        headers = {'Content-Type': 'application/json'}
+        response = self.client.get(url_for('api.popular'), headers=headers)
+        message = json.loads(response.data)['message']
+        self.assertEqual('No URL found', message)
