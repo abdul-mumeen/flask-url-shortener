@@ -2,7 +2,7 @@ import random
 import string
 
 import dotenv
-from app.models import LongUrl, ShortUrl, User, Visitor
+from app.models import LongUrl, ShortUrl, Visitor, visits
 from flask import abort, g, jsonify, request, url_for
 from sqlalchemy import desc, func
 
@@ -181,7 +181,8 @@ def change_short_url_target(id, url):
         return forbidden(long_url_input.errors)
     new_long_url = request.json.get('long_url')
     has_short_url = ShortUrl.query.filter_by(
-        user=g.current_user).filter(ShortUrl.long_url.has(long_url=new_long_url)).first()
+        user=g.current_user).filter(ShortUrl.long_url.has(
+            long_url=new_long_url)).first()
     if has_short_url:
         return forbidden("The url already has a shortened url '{}'".format(
             has_short_url.short_url))
@@ -197,36 +198,30 @@ def change_short_url_target(id, url):
     return jsonify({'success': True, 'message': 'updated'})
 
 
+# abstract the url details that is returned in the model
 @api.route('/shorturl/popular/', methods=['GET'])
 def popular():
-    urls = ShortUrl.query(func.count(ShortUrl.visitors.visitor_id).label(
-        'total')). order_by('total desc').all()  # Might consider limits later
-    if not urls:
+    # Might consider limits later
+    urls = db.session.query(ShortUrl, func.count(visits.c.short_url_id).label(
+        'total')).outerjoin(visits).group_by(
+        ShortUrl.short_url_id).order_by(desc('total')).all()
+    if urls:
         popular_urls = []
         for url in urls:
-            visitors = Visitor.query(Visitor.visitor_id).filter(
-                ShortUrl.visitors.any(short_url_id=url.short_url_id)).all()
-            popular_urls.append({
-                'short_url_url': url_for(
-                    'api.shorturl', _external=True) + str(url.short_url_id),
-                'short_url': url.short_url,
-                'number_of_visits': url.total,
-                'visitors': [
-                    url_for('api.visitor', vid=visitor.visitor_id,
-                            id=url.short_url_id,
-                            _external=True) for visitor in visitors]
-            })
+            url_details = url[0].get_details()
+            url_details['number_of_visits'] = url[1]
+            popular_urls.append(url_details)
         return jsonify({'success': True, 'popular_urls': popular_urls})
-    return not_found('No url was found')
+    return not_found('No URL found')
 
 
 @api.route('/shorturl/<int:id>/visitors/', methods=['GET'])
 def visitors(id):
     if ShortUrl.query.filter_by(
             short_url_id=id).filter_by(user=g.current_user).first():
-        visitors = Visitor.query(Visitor.visitor_id).filter(
-            ShortUrl.visitors.any(short_url_id=id)).all()
-        if not visitors:
+        visitors = Visitor.query.filter(
+            Visitor.short_urls.any(short_url_id=id)).all()
+        if visitors:
             visitors_details = []
             for visitor in visitors:
                 visitor_details = visitor.get_details()
@@ -239,7 +234,6 @@ def visitors(id):
     return not_found("No URL found with id '{}'".format(id))
 
 
-# Abstract visitors detail (keep it DRY)
 @api.route('/shorturl/<int:id>/visitors/<int:vid>', methods=['GET'])
 def visitor(id, vid):
     if ShortUrl.query.filter_by(

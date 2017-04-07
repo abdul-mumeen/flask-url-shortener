@@ -80,6 +80,18 @@ class ShortUrl(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def get_details(self):
+        url_details = {
+            'short_url_url': url_for(
+                'api.shorturl', id=self.short_url_id, _external=True),
+            'short_url': self.short_url,
+            'visitors': [
+                url_for('api.visitor', vid=visitor.visitor_id,
+                        id=self.short_url_id,
+                        _external=True) for visitor in self.visitors]
+        }
+        return url_details
+
     def __repr__(self):
         return '<Url %r>' % self.short_url
 
@@ -128,4 +140,4 @@ class Visitor(db.Model):
         return details
 
     def __repr__(self):
-        return '<Visitor %r>' % self.name
+        return '<Visitor %r>' % self.ip_address
