@@ -1,7 +1,6 @@
-import json
 from datetime import datetime
 
-from flask import current_app, jsonify, url_for
+from flask import current_app, url_for
 from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -39,7 +38,7 @@ class User(UserMixin, db.Model):
 
     def generate_auth_token(self, expiration):
         s = Serializer(
-            current_app.config['SECRET_KEY'],  expires_in=expiration)
+            current_app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'user_id': self.user_id})
 
     @staticmethod

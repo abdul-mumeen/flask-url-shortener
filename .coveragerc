@@ -1,3 +1,5 @@
 # .coveragerc
 [report]
 show_missing = True
+omit =
+    */python?.?/*
