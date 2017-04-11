@@ -9,6 +9,10 @@ from flask import url_for
 
 class UrlTestCase(unittest.TestCase):
     def setUp(self):
+        """
+        This function runs before each test initializing the application
+        creating tables in the db and creating a client that will consume it.
+        """
         self.app = create_app('testing')
         self.app_context = self.app.app_context()
         self.app_context.push()
@@ -16,19 +20,38 @@ class UrlTestCase(unittest.TestCase):
         self.client = self.app.test_client(use_cookies=True)
 
     def tearDown(self):
+        """
+        This function runs after each test removing the session and destroying
+        the table that might have been created during testing.
+        """
         db.session.remove()
         db.drop_all()
         self.app_context.pop()
 
-    def get_username_headers(self, username, password):
+    def get_username_headers(self, email, password):
+        """
+        This function returns a dictionary which contains a request header
+        encoded with the email and password authorization details.
+
+        keyword arguments:
+        email -- a string holding the user email address
+        passsword -- a string holding the user password
+        """
         return {
             'Authorization': 'Basic ' + b64encode(
-                (username + ':' + password).encode('utf-8')).decode('utf-8'),
+                (email + ':' + password).encode('utf-8')).decode('utf-8'),
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         }
 
     def get_token_headers(self, token):
+        """
+        This function returns a dictionary which contains a request header
+        encoded with the users token for authorization.
+
+        keyword argument:
+        token -- a string containing randomly generated encoded characters
+        """
         return {
             'Authorization': 'Token ' + token,
             'Accept': 'application/json',
@@ -36,16 +59,35 @@ class UrlTestCase(unittest.TestCase):
         }
 
     def register_user(self, f_name, l_name, email, password):
+        """
+        This function registers a user with the user information supplied
+
+        keyword arguments:
+        f_name -- a string containing the user's firt name
+        l_name -- a string containing the user's last name
+        email -- a string holding the user email address
+        passsword -- a string holding the user password
+        """
         user = User(first_name=f_name, last_name=l_name,
                     email=email, password=password)
         user.save()
 
     def get_token(self, email, password):
+        """
+        This function returns a token using the user's email and password.
+
+        keyword arguments:
+        email -- a string holding the user email address
+        passsword -- a string holding the user password
+        """
         header = self.get_username_headers(email, password)
         response = self.client.get(url_for('api.get_token'), headers=header)
         return json.loads(response.data)['token']
 
     def test_anonymous_shorten_url(self):
+        """
+        This function tests the response when an anonymous user shorten URL
+        """
         response = self.anonymous_shorten_url('https://www.google.com', '')
         short_url = response['url']
         success = response['success']
@@ -56,11 +98,16 @@ class UrlTestCase(unittest.TestCase):
         self.assertTrue(response['success'])
 
     def test_anonymous_shorten_vanity_url(self):
+        """
+        This function tests the response when an anonymous user shorten URL
+        using vanity string.
+        """
         response = self.anonymous_shorten_url('https://www.google.com', 'go')
         self.assertEqual(response['message'], 'Invalid credentials')
         self.assertEqual(response['error'], 'unauthorized')
 
     def anonymous_shorten_url(self, url, vanity):
+
         data = json.dumps({'long_url': url,
                            'vanity': vanity})
         headers = {'Content-Type': 'application/json'}
