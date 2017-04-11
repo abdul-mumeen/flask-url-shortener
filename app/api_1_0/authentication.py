@@ -1,9 +1,6 @@
-import json
-
 from app.models import User
 from flask import g, jsonify, request
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth
-from flask_login import AnonymousUserMixin
 
 from . import api
 from .errors import forbidden, unauthorized
@@ -24,6 +21,11 @@ def before_request():
 
 @api.route('/register', methods=['POST'])
 def register_user():
+    """
+    This function creates a new user from user information such as
+    firt_name, Last_name, email and password delivered through the body of
+    the request.
+    """
     request_data = request.json or request.form
     inputs = RegisterInputs(request)
     if not inputs.validate():
@@ -37,13 +39,17 @@ def register_user():
     user.save()
     response = jsonify(
         {'success': True, 'message': 'User creation successful'})
-    response.status_code = 200
+    response.status_code = 201
     return response
 
 
 @api.route('/token')
 @basic_auth.login_required
 def get_token():
+    """
+    This function call the get_user_token function to return a token to the
+    user after the username and passsword has been verified.
+    """
     if g.current_user.is_anonymous:
         return forbidden('Supply a username and password')
     email = g.current_user.email
@@ -52,12 +58,25 @@ def get_token():
 
 
 def get_user_token(user):
-    return jsonify({'token': user.generate_auth_token(expiration=3600).decode('utf-8'),
-                    'expiration': 3600})
+    """
+    This function returns the generated user token.
+
+    Keyword arguments:
+    user -- this is the User object representing the current user
+    """
+    return jsonify({'token': user.generate_auth_token(
+        expiration=3600).decode('utf-8'),
+        'expiration': 3600})
 
 
 @auth.verify_token
 def verify_token(token):
+    """
+    This function verifies the token supplied by the user.
+
+    Keyword arguments:
+    token -- a string of encoded cheracters.
+    """
     if not token:
         g.current_user = User.query.filter_by(
             email='anonymous@anonymous.com').first()
@@ -73,6 +92,14 @@ def verify_token(token):
 
 @basic_auth.verify_password
 def verify_password(email, password):
+    """
+    This function verifies the email and password supplied by the user.
+    It initiates an anonymous user if no email is supplied.
+
+    Keyword arguments:
+    email -- an email address passed as string
+    password -- a string variable
+    """
     if not email:
         g.current_user = User.query.filter_by(
             email='anonymous@anonymous.com').first()
@@ -92,4 +119,7 @@ def verify_password(email, password):
 @basic_auth.error_handler
 @auth.error_handler
 def auth_error():
+    """
+    This function returns unauthorized error when authentication fails.
+    """
     return unauthorized('Invalid credentials')

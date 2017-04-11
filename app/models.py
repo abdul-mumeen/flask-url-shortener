@@ -63,7 +63,7 @@ class User(UserMixin, db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return '<User %r>' % self.first_name + " " + self.last_name
+        return '<User %r>' % (self.first_name + " " + self.last_name)
 
 
 class ShortUrl(db.Model):
@@ -81,10 +81,17 @@ class ShortUrl(db.Model):
         db.session.commit()
 
     def get_details(self):
+        visit = db.session.query(ShortUrl, db.func.count(
+            visits.c.short_url_id)).outerjoin(visits).group_by(
+            ShortUrl.short_url_id).filter_by(
+            short_url_id=self.short_url_id).first()
+        no_of_visits = visit[1] if visit else 0
         url_details = {
+            'short_url': self.short_url,
             'short_url_url': url_for(
                 'api.shorturl', id=self.short_url_id, _external=True),
-            'short_url': self.short_url,
+            'long_url': self.long_url.long_url,
+            'number_of_visits': no_of_visits,
             'visitors': [
                 url_for('api.visitor', vid=visitor.visitor_id,
                         id=self.short_url_id,

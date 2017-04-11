@@ -1,4 +1,16 @@
-from flask import current_app, request, make_response, jsonify
+from flask import jsonify
+
+
+def unavailable(message):
+    response = jsonify({'error': 'unavailable', 'message': message})
+    response.status_code = 451
+    return response
+
+
+def bad_request(message):
+    response = jsonify({'error': 'bad_request', 'message': message})
+    response.status_code = 400
+    return response
 
 
 def forbidden(message):

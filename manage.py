@@ -6,6 +6,7 @@ import unittest
 import coverage
 import dotenv
 from app import create_app, db
+from app.models import LongUrl, ShortUrl, User, Visitor, visits
 from flask_migrate import MigrateCommand
 from flask_script import Manager, Shell
 
@@ -18,7 +19,7 @@ manager = Manager(app)
 
 def make_shell_context():
     """Make shell context"""
-    return dict(app=app, db=db)
+    return dict(app=app, db=db, User=User, ShortUrl=ShortUrl, LongUrl=LongUrl, visits=visits, Visitor=Visitor)
 
 
 @manager.command

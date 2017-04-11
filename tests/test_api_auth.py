@@ -3,8 +3,8 @@ import unittest
 from base64 import b64encode
 
 from app import create_app, db
-from app.models import LongUrl, ShortUrl, User, Visitor
-from flask import current_app, url_for
+from app.models import User
+from flask import url_for
 
 
 class ApiAuthTestCase(unittest.TestCase):
@@ -64,7 +64,7 @@ class ApiAuthTestCase(unittest.TestCase):
                                     data=json.dumps(user_data), headers=header)
         message = json.loads(response.data)['message']
         self.assertEqual(message, 'User creation successful')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
 
     def test_register_missing_fields(self):
         user_data = {'email': 'me@andela.com', 'first_name': 'Adedoyin',
