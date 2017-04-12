@@ -34,6 +34,7 @@ class ModelTestCase(unittest.TestCase):
         self.assertTrue(user)
         user.save()
         self.assertEqual(user.user_id, 1)
+        self.assertEqual(repr(user), '<User: Abdul-Mumeen Olasode>')
 
     def test_add_short_url(self):
         """
@@ -44,6 +45,7 @@ class ModelTestCase(unittest.TestCase):
         url.save()
         self.assertTrue(url.active)
         self.assertFalse(url.deleted)
+        self.assertEqual(repr(url), '<ShortUrl: http://127.0.0.1/t3T1n9>')
 
     def test_add_long_url(self):
         """
@@ -53,6 +55,8 @@ class ModelTestCase(unittest.TestCase):
         self.assertTrue(url)
         url.save()
         self.assertEqual(url.long_url_id, 1)
+        self.assertEqual(repr(url),
+                         '<LongUrl: http://www.endurance.eu/pepperoni>')
 
     def test_add_visitor(self):
         """
@@ -63,6 +67,7 @@ class ModelTestCase(unittest.TestCase):
         self.assertTrue(visitor)
         visitor.save()
         self.assertEqual(visitor.visitor_id, 1)
+        self.assertEqual(repr(visitor), '<Visitor: 198.168.1.1>')
 
     def test_user_password_hash(self):
         """

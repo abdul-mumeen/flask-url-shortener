@@ -1,6 +1,5 @@
 from app.models import ShortUrl, User, visits
 from flask import g, jsonify
-from sqlalchemy import desc, func
 
 from . import api
 from .. import db
@@ -12,9 +11,6 @@ def user():
     """
     Return the details of the currently logged in user.
     """
-    # user = User.query.filter_by(user_id=g.current_user.user_id).first()
-    # if not user:
-    #     return not_found('No user found')
     return jsonify({'success': True, 'user': g.current_user.get_details()})
 
 

@@ -303,6 +303,12 @@ class UrlTestCase(unittest.TestCase):
         response = self.uh.client.put(
             url_for('api.activate_url', id=1), headers=headers)
         self.assertEqual(response.status_code, 404)
+        data = json.dumps({'short_url': url_details['short_url']})
+        response = self.uh.client.post(
+            url_for('api.visit'), data=data,
+            headers={'Content-Type': 'application/json'})
+        message = json.loads(response.data)['message']
+        self.assertEqual('URL has been deleted', message)
 
     def test_delete_short_url_sharing_long_url(self):
         """
@@ -357,6 +363,27 @@ class UrlTestCase(unittest.TestCase):
             url_for('api.shorturl', id=1), headers=headers, data=data)
         message = json.loads(response.data)['message']
         self.assertEqual('updated', message)
+
+    def test_change_url_target_to_existing_one(self):
+        """
+        This function tests the changing of the long URL targetted by a
+        shortened URL for a registered user to an already existing long URL.
+        """
+        self.uh.register_user('Angula', 'Node', 'angular@node.com', 'python')
+        response = self.uh.user_shorten_url('https://www.google.com', '',
+                                            'angular@node.com', 'python')
+        response = self.uh.user_shorten_url('https://www.facebook.com', '',
+                                            'angular@node.com', 'python')
+        short_url_2 = response['url']['short_url']
+        headers = self.uh.get_token_headers(
+            self.uh.get_token('angular@node.com', 'python'))
+        data = json.dumps({'long_url': 'https://www.facebook.com'})
+        response = self.uh.client.put(
+            url_for('api.shorturl', id=1), headers=headers, data=data)
+        message = json.loads(response.data)['message']
+        self.assertEqual(
+            message,
+            "The url already has a shortened url '{}'".format(short_url_2))
 
     def test_visits_to_empty_url(self):
         """

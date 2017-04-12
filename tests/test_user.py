@@ -1,7 +1,6 @@
 import json
 import unittest
 
-from app.models import LongUrl
 from flask import url_for
 from util import UserDetailHelper as user_helper
 

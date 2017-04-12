@@ -13,9 +13,11 @@ basic_auth = HTTPBasicAuth()
 @api.before_request
 @auth.login_required
 def before_request():
+    allowed_anonymous_route = ['token', 'register', 'shorten',
+                               'recent', 'popular', 'visit', 'influential']
     if (g.current_user.is_anonymous
             and not set(request.path.split('/'))
-            .intersection(set(['token', 'register', 'shorten', 'recent', 'popular', 'visit', 'influential']))):
+            .intersection(set(allowed_anonymous_route))):
         return unauthorized('Invalid credentials')
 
 
