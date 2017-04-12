@@ -347,7 +347,7 @@ def visitor(id, vid):
     return not_found("No URL found with id '{}'".format(id))
 
 
-@api.route('/visit/', methods=['POST'])
+@api.route('/visit', methods=['POST'])
 def visit():
     """
     This function returns the long URL equivalent of the shortened URL

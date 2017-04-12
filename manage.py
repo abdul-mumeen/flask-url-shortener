@@ -15,15 +15,20 @@ manager = Manager(app)
 
 
 def make_shell_context():
-    """Make shell context"""
+    """
+    This function make the model, database and app available in the shell
+    context
+    """
     return dict(app=app, db=db, User=User, ShortUrl=ShortUrl,
                 LongUrl=LongUrl, visits=visits, Visitor=Visitor)
 
 
 @manager.command
 def test(coverages=False, verbosity=1):
-    print(coverages, verbosity)
-    """Run the unit tests with coverage when set to true."""
+    """
+    This function runs nosetests when the manage.py test is called
+    giving the option of running with coverage and setting verbosity.
+    """
     os.system('nosetests {} --cover-package=app '
               '--verbosity={}'.format(('--with-coverage' * coverages),
                                       verbosity))
