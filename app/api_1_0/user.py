@@ -1,0 +1,38 @@
+from app.models import ShortUrl, User, visits
+from flask import g, jsonify
+from sqlalchemy import desc, func
+
+from . import api
+from .. import db
+from .errors import not_found
+
+
+@api.route('/user', methods=['GET'])
+def user():
+    """
+    Return the details of the currently logged in user.
+    """
+    # user = User.query.filter_by(user_id=g.current_user.user_id).first()
+    # if not user:
+    #     return not_found('No user found')
+    return jsonify({'success': True, 'user': g.current_user.get_details()})
+
+
+@api.route('/users/influential', methods=['GET'])
+def influential():
+    """
+    Return a list of influential users which is base on the total number of
+    visits users have on all their shortened URLs.
+    """
+    users_and_visits = db.session.query(
+        User, db.func.count(visits.c.visitor_id).label('total')).join(
+        ShortUrl).outerjoin(visits).filter(ShortUrl.deleted == 0).group_by(
+        ShortUrl.user_id).order_by(db.desc('total')).all()
+    if users_and_visits:
+        users = []
+        for user_and_visits in users_and_visits:
+            user_details = user_and_visits[0].get_details()
+            user_details['number_of_visits'] = user_and_visits[1]
+            users.append(user_details)
+        return jsonify({'success': True, 'users': users})
+    return not_found('No user found')

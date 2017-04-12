@@ -75,6 +75,19 @@ class User(UserMixin, db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def get_details(self):
+        # This function returns the details of the current user
+        user_details = {
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'email': self.email,
+            'short_urls': [
+                url_for('api.shorturls', _external=True) +
+                str(short_url.short_url_id)
+                for short_url in self.short_urls
+            ]}
+        return user_details
+
     def __repr__(self):
         # This returns a machine representation of a user
         return '<User %r>' % (self.first_name + " " + self.last_name)
