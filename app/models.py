@@ -134,7 +134,7 @@ class ShortUrl(db.Model):
 
     def __repr__(self):
         # This returns a machine representation of the short url
-        return '<Url %r>' % self.short_url
+        return '<ShortUrl %r>' % self.short_url
 
 
 class LongUrl(db.Model):
@@ -155,7 +155,7 @@ class LongUrl(db.Model):
 
     def __repr__(self):
         # This returns a machine representation of a long URL
-        return '<Url %r>' % self.long_url
+        return '<LongUrl %r>' % self.long_url
 
 
 class Visitor(db.Model):
