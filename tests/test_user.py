@@ -55,9 +55,25 @@ class UrlTestCase(unittest.TestCase):
 
         response = self.uh.client.get(
             url_for('api.influential'), headers=headers)
-        users = json.dumps(response.data)['users']
+        users = json.loads(response.data)['users']
         self.assertIsNotNone(users)
         self.assertEqual(users[0]['first_name'], 'Ladi')
         self.assertEqual(users[0]['number_of_visits'], 3)
         self.assertEqual(users[1]['first_name'], 'Mumeen')
-        self.assertEqual(users[0]['number_of_visits'], 2)
+        self.assertEqual(users[1]['number_of_visits'], 2)
+
+    def test_get_user_details(self):
+        self.uh.register_user('Mumeen', 'Olasode', 'olasode@andela.com', 'and')
+        headers = self.uh.get_token_headers(
+            self.uh.get_token('olasode@andela.com', 'and'))
+        response = self.uh.client.get(url_for('api.user'), headers=headers)
+        user = json.loads(response.data)['user']
+        self.assertEqual(user['first_name'], 'Mumeen')
+        self.assertEqual(user['last_name'], 'Olasode')
+        self.assertFalse(user['short_urls'])
+
+    def test_user_route_with_no_credentials(self):
+        response = self.uh.client.get(url_for('api.user'))
+        message = json.loads(response.data)['message']
+        self.assertEqual(message, 'Invalid credentials')
+        self.assertEqual(response.status_code, 401)
