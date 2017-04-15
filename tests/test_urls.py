@@ -1,12 +1,17 @@
 import json
 import unittest
 
+import dotenv
 from app.models import LongUrl
 from flask import url_for
 from util import UserDetailHelper as user_helper
 
+dotenv.load()
+
 
 class UrlTestCase(unittest.TestCase):
+    url_domain = dotenv.get('URL_PREFIX')
+
     def setUp(self):
         """
         This function runs before each test initializing the application
@@ -30,7 +35,7 @@ class UrlTestCase(unittest.TestCase):
         short_url = response['url']
         success = response['success']
         self.assertTrue(short_url['short_url'])
-        self.assertIn('http://www.fus.ly/', short_url['short_url'])
+        self.assertIn(self.url_domain, short_url['short_url'])
         self.assertTrue(success)
         response = self.uh.anonymous_shorten_url(
             'https://www.facebook.com', '')
@@ -67,7 +72,7 @@ class UrlTestCase(unittest.TestCase):
         success = response['success']
         url = response['url']
         self.assertTrue(url['short_url'])
-        self.assertIn('http://www.fus.ly/', url['short_url'])
+        self.assertIn(self.url_domain, url['short_url'])
         self.assertTrue(success)
 
     def test_shorten_empty_url(self):
@@ -109,7 +114,7 @@ class UrlTestCase(unittest.TestCase):
             'https://www.google.com', 'goo',
             'abdulmumeen.olasode@andela.com', 'hassan')
         short_url = response['url']['short_url']
-        self.assertEqual(short_url, 'http://www.fus.ly/goo')
+        self.assertEqual(short_url, self.url_domain + 'goo')
 
     def test_reg_user_shorten_same_vanity_url(self):
         """
@@ -403,7 +408,7 @@ class UrlTestCase(unittest.TestCase):
         short URL.
         """
         header = {'Content-Type': 'application/json'}
-        data = json.dumps({'short_url': 'http://www.fus.ly/jLedO'})
+        data = json.dumps({'short_url': self.url_domain + 'jLedO'})
         response = self.uh.client.post(
             url_for('api.visit'), headers=header, data=data)
         message = json.loads(response.data)['message']
