@@ -9,7 +9,7 @@ class NavBar extends Component {
     super(props)
     this.state = {
       user: {},
-      isAuthenticated: true
+      isAuthenticated: false
     }
   }
 
