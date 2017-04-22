@@ -1,4 +1,6 @@
 import React, {Component, PropTypes} from 'react'
+import {bindActionCreators} from 'redux'
+import {connect} from 'react-redux'
 import {Link, browserHistory} from 'react-router'
 import {Navbar, Nav, NavItem} from 'react-bootstrap'
 import AuthenticationNav from './AuthenticationNav'
@@ -9,7 +11,7 @@ class NavBar extends Component {
     super(props)
     this.state = {
       user: {},
-      isAuthenticated: false
+      isAuthenticated: true
     }
   }
 
@@ -31,7 +33,7 @@ class NavBar extends Component {
           </Nav>
           <Nav pullRight>
             {
-              !this.state.isAuthenticated ? <AuthenticationNav /> : <UserDetailNav />
+              !this.props.isAuthenticated ? <AuthenticationNav /> : <UserDetailNav userName={this.props.userName} />
             }
           </Nav>
         </Navbar.Collapse>
@@ -40,4 +42,12 @@ class NavBar extends Component {
   }
 }
 
-export default NavBar
+function mapStateToProps (state) {
+  return {
+    isAuthenticated: state.auth.isAuthenticated,
+    statusText: state.auth.statusText,
+    userName: state.auth.userName
+  }
+}
+
+export default connect(mapStateToProps)(NavBar)

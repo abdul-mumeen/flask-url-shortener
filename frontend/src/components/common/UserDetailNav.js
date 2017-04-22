@@ -4,7 +4,7 @@ import {NavDropdown, MenuItem} from 'react-bootstrap'
 class UserDetailNav extends Component {
   render () {
     return (
-      <NavDropdown eventKey={3} title="Olasode Mumeen" id="basic-nav-dropdown">
+      <NavDropdown eventKey={3} title={this.props.userName} id="basic-nav-dropdown">
         <MenuItem eventKey={3.1}>User Profile</MenuItem>
         <MenuItem eventKey={3.2}>Settings</MenuItem>
         <MenuItem divider />

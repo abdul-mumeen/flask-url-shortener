@@ -15,10 +15,12 @@ class MainModal extends Component {
     )
   }
 }
+
 MainModal.propTypes = {
   header: PropTypes.string.isRequired,
   show: PropTypes.bool.isRequired,
   onHide: PropTypes.func.isRequired,
   body: PropTypes.object.isRequired
 }
+
 export default MainModal
