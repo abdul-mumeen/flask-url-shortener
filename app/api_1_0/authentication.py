@@ -10,15 +10,24 @@ auth = HTTPTokenAuth(scheme='Token')
 basic_auth = HTTPBasicAuth()
 
 
+@api.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+    return response
+
+
 @api.before_request
 @auth.login_required
 def before_request():
-    allowed_anonymous_route = ['token', 'register', 'shorten',
-                               'recent', 'popular', 'visit', 'influential']
-    if (g.current_user.is_anonymous
-            and not set(request.path.split('/'))
-            .intersection(set(allowed_anonymous_route))):
-        return unauthorized('Invalid credentials')
+    if request.method != 'OPTIONS':
+        allowed_anonymous_route = ['token', 'register', 'shorten',
+                                   'recent', 'popular', 'visit', 'influential']
+        if (g.current_user.is_anonymous
+                and not set(request.path.split('/'))
+                .intersection(set(allowed_anonymous_route))):
+            return unauthorized('Invalid credentials')
 
 
 @api.route('/register', methods=['POST'])
