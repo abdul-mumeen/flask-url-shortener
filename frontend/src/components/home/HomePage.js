@@ -3,6 +3,7 @@ import {Link} from 'react-router'
 import {Grid, Col, Row, Clearfix} from 'react-bootstrap'
 import PopularUrlPanel from './PopularUrlPanel'
 import MostRecentUrlPanel from './MostRecentUrlPanel'
+import InfluentialUsersPanel from './InfluentialUsersPanel'
 
 class HomePage extends Component {
   render () {
@@ -21,7 +22,7 @@ class HomePage extends Component {
           </Col>
           <Clearfix visibleSmBlock><code>&lt;{'Clearfix visibleSmBlock'} /&gt;</code></Clearfix>
           <Col sm={6} md={4}><MostRecentUrlPanel /></Col>
-          <Col sm={6} md={4}>hgjhdssdh</Col>
+          <Col sm={6} md={4}><InfluentialUsersPanel /></Col>
         </Row>
         <Row> foorurur</Row>
       </Grid>

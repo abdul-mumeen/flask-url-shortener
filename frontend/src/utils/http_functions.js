@@ -36,6 +36,10 @@ export function getMostRecentUrls () {
   return axios.get('http://127.0.0.1:5000/api/v1.0/shorturl/recent')
 }
 
+export function getInfluentialUsers () {
+  return axios.get('http://127.0.0.1:5000/api/v1.0/users/influential')
+}
+
 export function visitUrl (shortUrl) {
   const body = {
     short_url: shortUrl
