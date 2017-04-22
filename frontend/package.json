@@ -12,11 +12,13 @@
   "author": "Olasode Abdul-Mumeen",
   "license": "MIT",
   "dependencies": {
+    "axios": "^0.16.1",
     "babel-polyfill": "6.8.0",
     "bootstrap": "3.3.6",
     "http": "0.0.0",
     "http-proxy": "^1.16.2",
     "jquery": "2.2.3",
+    "jwt-decode": "^2.2.0",
     "react": "15.0.2",
     "react-bootstrap": "^0.30.8",
     "react-dom": "15.0.2",

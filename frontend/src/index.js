@@ -8,10 +8,9 @@ import routes from './routes'
 import './styles/styles.css'
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
 
-// const store = configureStore()
-// store.dispatch()
+const store = configureStore()
 render(
-  <Provider>
+  <Provider store={store}>
     <Router history={browserHistory} routes={routes} />
   </Provider>,
   document.getElementById('app')
