@@ -67,15 +67,12 @@ export function loginUser (email, password) {
       .then(parseJSON)
       .then(response => {
         try {
-          // dispatch(getUserData(response.token))
           dispatch(loginUserSuccess(response.token))
           browserHistory.push('/main/about')
         } catch (e) {
-          alert(e)
           dispatch(loginUserFailure({
             response: {
-              status: 403,
-              statusText: 'Invalid token'
+              statusText: 'Unexpected error, please try again'
             }
           }))
         }
@@ -83,7 +80,6 @@ export function loginUser (email, password) {
       .catch(error => {
         dispatch(loginUserFailure({
           response: {
-            status: error.response.data.status_code,
             statusText: error.response.data.message
           }
         }))
@@ -112,8 +108,7 @@ export function registerUserFailure (error) {
   return {
     type: REGISTER_USER_FAILURE,
     payload: {
-      status: error.response.status,
-      statusText: error.response.statusText
+      statusText: error.statusText
     }
   }
 }
@@ -126,12 +121,11 @@ export function registerUser (firstName, lastName, email, password, confirmPassw
       .then(response => {
         try {
           dispatch(registerUserSuccess(response.token))
-          browserHistory.push('/main')
+          browserHistory.push('/dashboard')
         } catch (e) {
           dispatch(registerUserFailure({
             response: {
-              status: 403,
-              statusText: 'Invalid token'
+              statusText: 'Unexpected error, please try again'
             }
           }))
         }
@@ -139,8 +133,7 @@ export function registerUser (firstName, lastName, email, password, confirmPassw
       .catch(error => {
         dispatch(registerUserFailure({
           response: {
-            status: error,
-            statusText: 'User with that email already exists'
+            statusText: error.response.data.message
           }
         }
         ))

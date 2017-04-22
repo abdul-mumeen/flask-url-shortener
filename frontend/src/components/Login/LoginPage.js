@@ -40,37 +40,38 @@ class LoginPage extends Component {
     return (
       <Form horizontal>
         <FormGroup controlId="formHorizontalEmail">
-          <Col sm={12}>
+          <Col sm={10}>
             {this.props.statusText}
           </Col>
         </FormGroup>
         <FormGroup controlId="formHorizontalEmail">
-          <Col componentClass={ControlLabel} sm={2}>
+          <Col componentClass={ControlLabel} sm={4}>
             Email
           </Col>
-          <Col sm={10}>
-            <FormControl type="text" placeholder="Email" onChange={(e) => this.changeValue(e, 'email')} />
+          <Col sm={6}>
+            <FormControl type="text" placeholder="Email"
+              onChange={(e) => this.changeValue(e, 'email')} />
           </Col>
         </FormGroup>
-
         <FormGroup controlId="formHorizontalPassword">
-          <Col componentClass={ControlLabel} sm={2}>
+          <Col componentClass={ControlLabel} sm={4}>
             Password
           </Col>
-          <Col sm={10}>
-            <FormControl type="password" placeholder="Password" onChange={(e) => this.changeValue(e, 'password')} />
+          <Col sm={6}>
+            <FormControl type="password" placeholder="Password"
+              onChange={(e) => this.changeValue(e, 'password')} />
           </Col>
         </FormGroup>
 
         <FormGroup>
-          <Col smOffset={2} sm={10}>
+          <Col smOffset={4} sm={10}>
             <Checkbox>Remember me</Checkbox>
           </Col>
         </FormGroup>
 
         <FormGroup>
-          <Col smOffset={2} sm={10}>
-            <Button type="submit" onClick={(e) => this.login(e)}>
+          <Col smOffset={4} sm={10}>
+            <Button bsStyle="success" type="submit" onClick={(e) => this.login(e)}>
               Sign in
             </Button>
           </Col>

@@ -1,8 +1,8 @@
 import React, {Component, PropTypes} from 'react'
 import {Nav, Button} from 'react-bootstrap'
 import MainModal from './MainModal'
-import AboutPage from '../about/AboutPage'
 import LoginPage from '../login/LoginPage'
+import RegisterPage from '../register/RegisterPage'
 
 class AuthenticationNav extends Component {
   constructor (props) {
@@ -18,7 +18,7 @@ class AuthenticationNav extends Component {
   handleClick (e) {
     const newState = Object.assign({}, this.state, {show: true})
     newState.header = e.target.value
-    newState.body = (newState.header === 'Login') ? <LoginPage /> : <AboutPage />
+    newState.body = (newState.header === 'Login') ? <LoginPage /> : <RegisterPage />
     this.setState(newState)
   }
 

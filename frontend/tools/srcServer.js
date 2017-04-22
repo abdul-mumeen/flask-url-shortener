@@ -19,8 +19,8 @@ app.use(require('webpack-dev-middleware')(compiler, {
 
 app.use(require('webpack-hot-middleware')(compiler))
 
-app.all(/^\/api\/(.*)/, (req, res) => {
-  proxy.web(req, res, { target: 'http://localhost:5000' })
+app.all(/^\/api\/v1.0\/*/, (req, res) => {
+  proxy.web(req, res, { target: 'http://127.0.0.1:5000' })
 })
 
 app.get('*', function (req, res) {

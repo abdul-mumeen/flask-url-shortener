@@ -19,7 +19,8 @@ const initialState = {
   statusText: null,
   isRegistering: false,
   isRegistered: false,
-  registerStatusText: null
+  registerStatusText: 'All fields are required!',
+  submit: false
 }
 
 export default createReducer(initialState, {
@@ -57,8 +58,7 @@ export default createReducer(initialState, {
         isAuthenticated: true,
         isRegistering: false,
         token: payload.token,
-        userName: jwtDecode(payload.token).user_id,
-        registerStatusText: 'You have been successfully logged in.'
+        registerStatusText: 'You have been successfully registered.'
       }),
   [REGISTER_USER_REQUEST]: (state) =>
       Object.assign({}, state, {
@@ -68,7 +68,7 @@ export default createReducer(initialState, {
       Object.assign({}, state, {
         isAuthenticated: false,
         token: null,
-        userName: null,
-        registerStatusText: `Register Error: ${payload.status} ${payload.statusText}`
+        registerStatusText: `Register Error: ${payload.statusText}`,
+        submit: true
       })
 })

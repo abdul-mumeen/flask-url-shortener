@@ -48,7 +48,7 @@ export function visitUrl (shortUrl) {
 }
 
 export function createUser (first_name, last_name, email, password, confirm_password) {
-  return axios.post('api/v1.0/register', {
+  return axios.post('http://127.0.0.1:5000/api/v1.0/register', {
     first_name,
     last_name,
     email,
@@ -62,6 +62,6 @@ export function getToken (email, password) {
   return axios.get('http://127.0.0.1:5000/api/v1.0/token', emailPasswordConfig(email, password))
 }
 
-export function data_about_user (token) {
+export function getUserDetails (token) {
   return axios.get('api/v1.0/user', tokenConfig(token))
 }
