@@ -7,21 +7,19 @@ import * as loginActions from '../../actions/authActions'
 class LoginPage extends Component {
   constructor (props) {
     super(props)
-    const redirectRoute = '/login'
     this.state = {
       email: '',
       password: '',
       email_error_text: null,
       password_error_text: null,
-      redirectTo: redirectRoute,
       disabled: true
     }
   }
   changeValue (e, type) {
     const value = e.target.value
-    const next_state = {}
-    next_state[type] = value
-    this.setState(next_state)
+    const nextState = {}
+    nextState[type] = value
+    this.setState(nextState)
   }
 
   _handleKeyPress (e) {

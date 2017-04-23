@@ -1,7 +1,8 @@
 import React, {Component, PropTypes} from 'react'
 import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
-import {FormGroup, Form, Button, Checkbox, HelpBlock, FormControl, ControlLabel, Col} from 'react-bootstrap'
+import {FormGroup, Form, Button, Checkbox, HelpBlock, FormControl,
+  ControlLabel, Col} from 'react-bootstrap'
 import * as loginActions from '../../actions/authActions'
 import { validateEmail } from '../../utils/misc'
 
@@ -27,7 +28,6 @@ class RegisterPage extends Component {
     let passwordIsValid = false
     let passwordMatch = false
     let userDetails = false
-
 
     if (this.state.password === this.state.confirmPassword) {
       passwordMatch = true
@@ -70,9 +70,9 @@ class RegisterPage extends Component {
 
   changeValue (e, type) {
     const value = e.target.value
-    const next_state = {}
-    next_state[type] = value
-    this.setState(next_state, () => {
+    const nextState = {}
+    nextState[type] = value
+    this.setState(nextState, () => {
       this.isDisabled()
     })
   }

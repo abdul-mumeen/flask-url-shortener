@@ -15,7 +15,6 @@ class InfluentialUsersPanel extends Component {
 
   render () {
     const {influentialUsers} = this.props
-    console.log(influentialUsers)
     return (
       <Panel collapsible defaultExpanded header="Influential Users">
         <ListGroup fill>
@@ -34,7 +33,6 @@ InfluentialUsersPanel.propTypes = {
 }
 
 function mapStateToProps (state, ownProps) {
-  console.log(state.users.influentialUsers)
   return {
     influentialUsers: state.users.influentialUsers
   }

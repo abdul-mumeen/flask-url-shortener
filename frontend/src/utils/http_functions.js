@@ -58,8 +58,20 @@ export function createUser (first_name, last_name, email, password, confirm_pass
 }
 
 export function getToken (email, password) {
-  console.log(emailPasswordConfig(email, password))
   return axios.get('http://127.0.0.1:5000/api/v1.0/token', emailPasswordConfig(email, password))
+}
+
+export function shortenLongUrl (longUrl, vanity) {
+  if (vanity) {
+    const token = localStorage.getItem('token')
+    const data = {
+      long_url: longUrl,
+      vanity
+    }
+    return axios.post('http://127.0.0.1:5000/api/v1.0/shorten', data, tokenConfig(token))
+  } else {
+    return axios.post('http://127.0.0.1:5000/api/v1.0/shorten', {long_url: longUrl})
+  }
 }
 
 export function getUserDetails (token) {
