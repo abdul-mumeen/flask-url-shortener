@@ -11,5 +11,7 @@ export default (
     <Route path="/" component={RedirectPage} />
     <Route path="/:vs" component={RedirectPage} />
     <Route path="about" component={AboutPage} />
+    <Route path="login" component={HomePage} />
+    <Route path="signup" component={HomePage} />
   </Route>
 )

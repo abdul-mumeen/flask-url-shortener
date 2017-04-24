@@ -105,7 +105,7 @@ export function loadPopularUrls () {
     .then(response => {
       dispatch(loadPopularUrlSuccess(response.popular_urls))
     }).catch(error => {
-      const popular_urls = ['No URL on this list']
+      const popular_urls = [{short_url: 'No URL on this list'}]
       dispatch(loadPopularUrlSuccess(popular_urls))
     })
   }
@@ -118,7 +118,7 @@ export function loadMostRecentUrls () {
     .then(response => {
       dispatch(loadMostRecentUrlSuccess(response.recents))
     }).catch(error => {
-      const recents = ['No URL on this list']
+      const recents = [{short_url: 'No URL on this list'}]
       dispatch(loadMostRecentUrlSuccess(recents))
     })
   }
