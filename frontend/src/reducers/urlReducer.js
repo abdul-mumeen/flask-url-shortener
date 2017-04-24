@@ -19,7 +19,7 @@ const initialState = {
     route: null,
     errorMessage: ''
   },
-  shortUrl: '',
+  shortUrl: 'Andela one',
   shortened: false,
   displayStatusText: false,
   shortenStatusText: 'Enter a valid URL'

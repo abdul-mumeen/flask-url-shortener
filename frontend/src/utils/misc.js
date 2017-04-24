@@ -10,7 +10,9 @@ export function createConstants (...constants) {
 export function createReducer (initialState, reducerMap) {
   return (state = initialState, action) => {
     const reducer = reducerMap[action.type]
-
+    if(action.type === 'SHORTEN_LONG_URL_SUCCESS') {
+      debugger;
+    }
     return reducer
       ? reducer(state, action.payload)
       : state

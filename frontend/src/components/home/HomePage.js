@@ -37,13 +37,16 @@ class HomePage extends Component {
       this.shorten(e)
     }
   }
+
   componentWillReceiveProps (nextProps) {
-    this.setState({
-      shortUrl: nextProps.shortUrl,
-      shortened: nextProps.shortened,
-      displayStatusText: nextProps.displayStatusText,
-      shortenStatusText: nextProps.shortenStatusText
-    })
+    if (this.props !== nextProps) {
+      this.setState({
+        shortUrl: nextProps.shortUrl,
+        shortened: nextProps.shortened,
+        displayStatusText: nextProps.displayStatusText,
+        shortenStatusText: nextProps.shortenStatusText
+      })
+    }
     console.log(this.state)
     console.log(this.props)
     console.log(nextProps)
