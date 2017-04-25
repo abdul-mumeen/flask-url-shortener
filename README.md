@@ -12,9 +12,10 @@
 5. [Other Features](#other-features)
 6. [Running Tests](#running-tests)
 7. [Built With](#built-with)
-8. [Authors](#authors)
-9. [Acknowledgments](#acknowledgments)
-10. [Project Demo](#project-demo)
+8. [Limitations](#limitations)
+9. [Authors](#authors)
+10. [Acknowledgments](#acknowledgments)
+11. [Project Demo](#project-demo)
 
 ### <a name="introduction"></a>Introduction
 Flask-url-shortener is a REST API that allows users to shorten long, ugly URLs into nicely formatted short URLs that can be customized using a user's vanity string of choice. Endpoints can be accessed through token based authentication which token can be gotten by the user through basic authentication (email and password).
@@ -52,14 +53,162 @@ Flask-url-shortener is a REST API that allows users to shorten long, ugly URLs i
 ### <a name="usage"></a>Usage
 Its important to state here again that the two means of authentication (i.e Basic Auth and Token Auth) must be passed into the request header.
 
+1. To create a new user on the api:
+    Input:
+    ```cmd
+    curl -i -X POST -H "Content-Type: application/json" -d '{"first_name":"rikky", "last_name":"Ngozi", "email":"ngozi@andela.com", "password":"python", "confirm_password":"python"}' http://frus.herokuapp.com/api/v1.0/register
+    ```
+    Output:
+    ```cmd
+    {
+      "message": "User creation successful",
+      "success": true
+    }
+    ```
 
+
+2. To get token:
+    Input:
+    ```cmd
+    url -u ngozi@andela.com:python http://frus.herokuapp.com/api/v1.0/token
+    ```
+    Output:
+    ```
+    {
+      "expiration": 3600,
+      "token": "eyJhbGciOiJIUzI1NiIsImlhdCI6MTQ5MzExMDQzMCwiZXhwIjoxNDkzMTE0MDMwfQ.eyJ1c2VyX2lkIjozfQ.NvL9u4eAO4iKB8pT501mk-BXx4Kq3p9gcTU83s23Nwo"
+    }
+    ```
+    **NOTE:** The token needs to be attached to subsequent calls in order to access restricted resources.
+
+3. Shorten a long URL:
+    Input:
+    ```
+    curl -i -X POST -H '{"Authorization: Token eyJhbGciOiJIUzI1NiIsImlhdCI6MTQ5MzExMDQzMCwiZXhwIjoxNDkzMTE0MDMwfQ.eyJ1c2VyX2lkIjozfQ.NvL9u4eAO4iKB8pT501mk-BXx4Kq3p9gcTU83s23Nwo", "Content-Type: application/json"}' -d '{"long_url":"http://www.andela.com"}' http://frus.herokuapp.com/api/v1.0/shorten
+    ```
+    Output:
+    ```
+    {
+      "success": true,
+      "url": {
+        "long_url": "http://www.andela.com",
+        "number_of_visits": 0,
+        "short_url": "https://www.frus.herokuapp.com/TSi4Q",
+        "short_url_url": "http://frus.herokuapp.com/api/v1.0/shorturl/1",
+        "visitors": []
+      }
+    }
+    ```
+
+4. Get a list of user's shortened URLs:
+    Input:
+    ```cmd
+    curl -i -X GET -H '{"Authorization: Token eyJhbGciOiJIUzI1NiIsImlhdCI6MTQ5MzExMDQzMCwiZXhwIjoxNDkzMTE0MDMwfQ.eyJ1c2VyX2lkIjozfQ.NvL9u4eAO4iKB8pT501mk-BXx4Kq3p9gcTU83s23Nwo", "Content-Type: application/json"}' http://frus.herokuapp.com/api/v1.0/shorturl/
+    ```
+    Output:
+    ```
+    {
+      "success": true,
+      "urls": [
+        {
+          "long_url": "http://www.andela.com",
+          "number_of_visits": 0,
+          "short_url": "https://www.frus.herokuapp.com/TSi4Q",
+          "short_url_url": "http://frus.herokuapp.com/api/v1.0/shorturl/1",
+          "visitors": []
+        },
+        {
+          "long_url": "http://www.google.com",
+          "number_of_visits": 0,
+          "short_url": "https://www.frus.herokuapp.com/TSiV7Q",
+          "short_url_url": "http://frus.herokuapp.com/api/v1.0/shorturl/2",
+          "visitors": []
+        }
+      ]
+      }
+    }
+    ```
+
+5. Get a list of recently shortened URLs:
+    Input:
+    ```cmd
+    curl -i -X GET -H '{"Authorization: Token eyJhbGciOiJIUzI1NiIsImlhdCI6MTQ5MzExMDQzMCwiZXhwIjoxNDkzMTE0MDMwfQ.eyJ1c2VyX2lkIjozfQ.NvL9u4eAO4iKB8pT501mk-BXx4Kq3p9gcTU83s23Nwo", "Content-Type: application/json"}' http://frus.herokuapp.com/api/v1.0/shorturl/recent
+    ```
+    Output:
+    ```
+    {
+      "success": true,
+      "recents": [
+        {
+          "long_url": "http://www.google.com",
+          "number_of_visits": 0,
+          "short_url": "https://www.frus.herokuapp.com/TSiV7Q",
+          "short_url_url": "http://frus.herokuapp.com/api/v1.0/shorturl/2",
+          "visitors": []
+        },
+        {
+          "long_url": "http://www.andela.com",
+          "number_of_visits": 0,
+          "short_url": "https://www.frus.herokuapp.com/TSi4Q",
+          "short_url_url": "http://frus.herokuapp.com/api/v1.0/shorturl/1",
+          "visitors": []
+        }
+      ]
+      }
+    }
+    ```
+
+6. Delete a shortened URL:
+    Input:
+    ```cmd
+    curl -i -X DELETE -H '{"Authorization: Token eyJhbGciOiJIUzI1NiIsImlhdCI6MTQ5MzExMDQzMCwiZXhwIjoxNDkzMTE0MDMwfQ.eyJ1c2VyX2lkIjozfQ.NvL9u4eAO4iKB8pT501mk-BXx4Kq3p9gcTU83s23Nwo", "Content-Type: application/json"}' http://frus.herokuapp.com/api/v1.0/shorturl/1
+    ```
+    Output:
+    ```
+    {
+      "success": true,
+      "message": "Deleted"
+    }
+    ```
+
+7. Change shortened URL target long_url:
+Input:
+    ```cmd
+    curl -i -X PUT -H '{"Authorization: Token eyJhbGciOiJIUzI1NiIsImlhdCI6MTQ5MzExMDQzMCwiZXhwIjoxNDkzMTE0MDMwfQ.eyJ1c2VyX2lkIjozfQ.NvL9u4eAO4iKB8pT501mk-BXx4Kq3p9gcTU83s23Nwo", "Content-Type: application/json"}' -d '{"http://www.flask-url-shortener.com"}' http://frus.herokuapp.com/api/v1.0/shorturl/2
+    ```
+    Output:
+    ```
+    {
+      "success": true,
+      "message": "Updated"
+    }
+    ```
+
+8. Get user details
+    Input:
+    ```cmd
+    curl -i -X GET -H '{"Authorization: Token eyJhbGciOiJIUzI1NiIsImlhdCI6MTQ5MzExMDQzMCwiZXhwIjoxNDkzMTE0MDMwfQ.eyJ1c2VyX2lkIjozfQ.NvL9u4eAO4iKB8pT501mk-BXx4Kq3p9gcTU83s23Nwo", "Content-Type: application/json"}' http://frus.herokuapp.com/api/v1.0/shorturl/recent
+    ```
+    Output:
+    ```
+    {
+      "success": true,
+      "user": {
+        "email": "erika@andela.com",
+        "first_name": "Erika",
+        "last_name": "Dike",
+        "short_urls": [
+          "http://frus.herokuapp.com/api/v1.0/shorturl/4"
+        ]
+      }
+    }
+    ```
 
 ### <a name="running-tests"></a>Running Tests
 1. Navigate to the project directory.
 2. Run `python manage.py test` to run test and check coverage.
 
 ### <a name="built-with"></a>Built With
-
 * [Flask](http://flask.pocoo.org/) - Flask is a BCD licensed microframework for Python based on Werkzeug and Jinja 2.
 * [Flasl-HTTPAuth](https://flask-httpauth.readthedocs.io/en/latest/) - This is a simple extension that simplifies the use of HTTP authentication with Flask routes.
 * [Flask-Migrate](https://flask-migrate.readthedocs.io/en/latest/) - This an extension that handles SQLAlchemy database migrations for Flask applications using Alembic. The database operations are made available through the Flask command-line interface.
@@ -70,16 +219,17 @@ Its important to state here again that the two means of authentication (i.e Basi
 * [Python-Env](https://github.com/mattseymour/python-env) - This library allows the saving of environment variables in .env and loaded when the application runs.
 * [Nose](https://pypi.python.org/pypi/nose/1.3.7) - The python framework that extends the test loading and running features of unittest, making it easier to write, find and run tests.
 
-### <a name="authors"></a>Authors
+### <a name="limitations"></a>Limitations
+One obvious limitation to this project is that the shortened URL can be longer than the long URL supplied since the app is curren hosted on Heroku and the domain name given by Heroku is long.
 
+### <a name="authors"></a>Authors
 * **Olasode Adeyemi Abdul-Mumeen** - *Software Developer at Andela*
 
 ### <a name="acknowledgments"></a>Acknowledgments
-
 * My gratitude goes to the following people;
-1. My facilitator **Njira Perci** for being an icon in terms of doing it the right way.
+1. **Njira Percila** for  being a great facilitator and an icon to emulate in terms of doing it the right way.
 2. **Ichiato Ikinkin**, **Koya Adegboyega**, **Durodola Damilola**, **Bolaji Olajide** and **Oladipupo Adeniran** for being a wonderful teammates giving good ideas and support.
 3. **Hassan Oyeboade**, **Kola Erinoso** and **Chukwuerika Dike** for their mentoring during the development of this project.
 
 ### <a name="project-demo"></a>Project Demo
-Click [here](https://www.youtube.com/watch?v=yYiFXGaXP6g) to view the project demo
+Click [here](https://www.youtube.com/watch?v=OWKAxiGB1RA&feature=youtu.be) to view the project demo
