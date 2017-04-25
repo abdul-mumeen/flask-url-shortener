@@ -84,7 +84,7 @@ class UrlTestCase(unittest.TestCase):
                               'abdulmumeen.olasode@andela.com', 'hassan')
         response = self.uh.user_shorten_url(
             '', '', 'abdulmumeen.olasode@andela.com', 'hassan')
-        self.assertIn('This field is required.', response['message'])
+        self.assertIn('A long URL is required', response['message'])
 
     def test_reg_user_shorten_same_url(self):
         """
@@ -351,7 +351,7 @@ class UrlTestCase(unittest.TestCase):
         response = self.uh.client.put(
             url_for('api.shorturl', id=1), headers=headers, data=data)
         message = json.loads(response.data)['message']
-        self.assertIn('This field is required.', message)
+        self.assertIn('A long URL is required', message)
         data = json.dumps({'long_url': 'https://www.facebook.com'})
         response = self.uh.client.put(
             url_for('api.shorturl', id=1), headers=headers, data=data)
@@ -400,7 +400,7 @@ class UrlTestCase(unittest.TestCase):
         response = self.uh.client.post(
             url_for('api.visit'), headers=header, data=data)
         message = json.loads(response.data)['message']
-        self.assertIn('This field is required.', message)
+        self.assertIn('A short URL is required', message)
 
     def test_visits_to_not_existing_url(self):
         """

@@ -108,8 +108,9 @@ class ApiAuthTestCase(unittest.TestCase):
         response = self.client.post(url_for('api.register_user'),
                                     data=json.dumps(user_data), headers=header)
         message = json.loads(response.data)['message']
-        self.assertIn('This field is required.', message)
-        self.assertEqual(response.status_code, 403)
+        self.assertIn('All entities first_name, last_name, email, password,'
+                      ' confirm_password are required', message)
+        self.assertEqual(response.status_code, 400)
 
     def test_register_invalid_email(self):
         """
@@ -126,7 +127,7 @@ class ApiAuthTestCase(unittest.TestCase):
                                     data=json.dumps(user_data), headers=header)
         message = json.loads(response.data)['message']
         self.assertIn('Invalid email address.', message)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 400)
 
     def test_register_not_matching_password(self):
         """
@@ -143,7 +144,7 @@ class ApiAuthTestCase(unittest.TestCase):
                                     data=json.dumps(user_data), headers=header)
         message = json.loads(response.data)['message']
         self.assertIn('Password must match', message)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 400)
 
     def test_register_with_existing_email(self):
         """
