@@ -19,3 +19,4 @@ future==0.16.0
 gunicorn==19.7.1
 flask-login
 git+https://git@github.com/nathancahill/flask-inputs
+psycopg2==2.7.1

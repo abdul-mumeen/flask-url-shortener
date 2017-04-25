@@ -14,7 +14,7 @@ class Config:
     SECRET_KEY = dotenv.get('SECRET_KEY')
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SERVER_NAME = '127.0.0.1:5000'
+    SERVER_NAME = dotenv.get('SERVER_NAME')
 
 
 class DevelopmentConfig(Config):
