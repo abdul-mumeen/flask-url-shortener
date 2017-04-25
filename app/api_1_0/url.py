@@ -2,15 +2,15 @@ import random
 import string
 
 import dotenv
-from app.models import LongUrl, ShortUrl, Visitor, visits
 from flask import abort, g, jsonify, request, url_for
 from sqlalchemy import desc, func
 
+from app.models import LongUrl, ShortUrl, Visitor, visits
 from . import api
 from .. import db
 from .errors import (bad_request, forbidden, not_found, unauthorized,
                      unavailable)
-from .validators import ValidateLongUrl, ValidateShortUrl
+from .validators import LongUrlValidator, ShortUrlValidator
 
 dotenv.load()
 
@@ -22,9 +22,11 @@ def shorten():
     a URL. The URL is shortened and saved in the database returning the
     details of the shortened URL.
     """
-    long_url_input = ValidateLongUrl(request)
+    long_url_input = LongUrlValidator(request)
     if not long_url_input.validate():
-        return forbidden(long_url_input.errors)
+        if 'This field is required.' in long_url_input.errors:
+            return bad_request('A long URL is required')
+        return bad_request(long_url_input.errors)
     long_url = request.json.get('long_url')
     search_long_url = LongUrl.query.filter_by(long_url=long_url).first()
     if search_long_url:
@@ -259,8 +261,10 @@ def change_short_url_target(url):
     url -- the short url object to be updated
     long_url -- the string value to be updated in the short URL
     """
-    long_url_input = ValidateLongUrl(request)
+    long_url_input = LongUrlValidator(request)
     if not long_url_input.validate():
+        if 'This field is required.' in long_url_input.errors:
+            return bad_request('A long URL is required')
         return bad_request(long_url_input.errors)
     new_long_url = request.json.get('long_url')
     has_short_url = ShortUrl.query.filter_by(
@@ -361,8 +365,10 @@ def visit():
     Keyword arguments:
     short_url -- the shortened url format string
     """
-    short_url_input = ValidateShortUrl(request)
+    short_url_input = ShortUrlValidator(request)
     if not short_url_input.validate():
+        if 'This field is required.' in short_url_input.errors:
+            return bad_request('A short URL is required')
         return bad_request(short_url_input.errors)
     short_url = request.json.get('short_url')
     short_url_details = ShortUrl.query.filter_by(

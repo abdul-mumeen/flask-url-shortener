@@ -1,10 +1,10 @@
-from app.models import User
 from flask import g, jsonify, request
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth
 
+from app.models import User
 from . import api
-from .errors import forbidden, unauthorized
-from .validators import RegisterInputs
+from .errors import forbidden, unauthorized, bad_request
+from .validators import RegisterInputsValidator
 
 auth = HTTPTokenAuth(scheme='Token')
 basic_auth = HTTPBasicAuth()
@@ -42,9 +42,12 @@ def register_user():
     the request.
     """
     request_data = request.json or request.form
-    inputs = RegisterInputs(request)
+    inputs = RegisterInputsValidator(request)
     if not inputs.validate():
-        return forbidden(inputs.errors)
+        if 'This field is required.' in inputs.errors:
+            return bad_request('All entities first_name, last_name, email, '
+                               'password, confirm_password are required')
+        return bad_request(inputs.errors)
     if User.query.filter_by(email=request_data.get('email')).first():
         return forbidden('Email already exist.')
     user = User(first_name=request_data.get('first_name'),

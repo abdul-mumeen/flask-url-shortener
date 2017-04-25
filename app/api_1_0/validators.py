@@ -2,7 +2,7 @@ from flask_inputs import Inputs
 from wtforms.validators import URL, DataRequired, Email, EqualTo
 
 
-class RegisterInputs(Inputs):
+class RegisterInputsValidator(Inputs):
     # This class is used to validate input submitted during signup
     json = {
         'email': [DataRequired(), Email()],
@@ -14,14 +14,14 @@ class RegisterInputs(Inputs):
     }
 
 
-class ValidateLongUrl(Inputs):
+class LongUrlValidator(Inputs):
     # This class is used to validate long url supplied
     json = {
         'long_url': [DataRequired(), URL()]
     }
 
 
-class ValidateShortUrl(Inputs):
+class ShortUrlValidator(Inputs):
     # This class is used to validate a short url supplied
     json = {
         'short_url': [DataRequired(), URL()]
