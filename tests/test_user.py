@@ -2,6 +2,7 @@ import json
 import unittest
 
 from flask import url_for
+
 from util import UserDetailHelper as user_helper
 
 

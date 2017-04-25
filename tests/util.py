@@ -1,9 +1,10 @@
 import json
 from base64 import b64encode
 
+from flask import url_for
+
 from app import create_app, db
 from app.models import User
-from flask import url_for
 
 
 class UserDetailHelper(object):

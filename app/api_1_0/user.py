@@ -1,6 +1,6 @@
-from app.models import ShortUrl, User, visits
 from flask import g, jsonify
 
+from app.models import ShortUrl, User, visits
 from . import api
 from .. import db
 from .errors import not_found

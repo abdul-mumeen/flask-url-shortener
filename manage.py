@@ -2,11 +2,11 @@
 import os
 
 import dotenv
-from app import create_app, db
-from app.models import LongUrl, ShortUrl, User, Visitor, visits
 from flask_migrate import MigrateCommand
 from flask_script import Manager, Shell
 
+from app import create_app, db
+from app.models import LongUrl, ShortUrl, User, Visitor, visits
 dotenv.load()
 
 

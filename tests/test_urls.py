@@ -2,8 +2,9 @@ import json
 import unittest
 
 import dotenv
-from app.models import LongUrl
 from flask import url_for
+
+from app.models import LongUrl
 from util import UserDetailHelper as user_helper
 
 dotenv.load()
