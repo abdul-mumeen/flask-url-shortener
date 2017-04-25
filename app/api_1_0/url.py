@@ -288,10 +288,15 @@ def popular():
     This function return a collection of popular short URLs based on the
     number of visits they have.
     """
-    urls = db.session.query(ShortUrl, func.count(visits.c.short_url_id).label(
-        'total')).outerjoin(visits).group_by(
-        ShortUrl.short_url_id).order_by(
-        desc('total')).filter(ShortUrl.deleted == 0).limit(10).all()
+    urls = (db.session
+            .query(ShortUrl,
+                   func.count(visits.c.short_url_id)
+                   .label('total'))
+            .outerjoin(visits)
+            .group_by(ShortUrl.short_url_id)
+            .order_by(desc('total'))
+            .filter(ShortUrl.deleted == 0)
+            .limit(10).all())
     if urls:
         popular_urls = []
         for url in urls:

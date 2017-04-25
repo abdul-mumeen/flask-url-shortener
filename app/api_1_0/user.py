@@ -20,10 +20,15 @@ def influential():
     Return a list of influential users which is base on the total number of
     visits users have on all their shortened URLs.
     """
-    users_and_visits = db.session.query(
-        User, db.func.count(visits.c.visitor_id).label('total')).join(
-        ShortUrl).outerjoin(visits).filter(ShortUrl.deleted == 0).group_by(
-        ShortUrl.user_id).order_by(db.desc('total')).all()
+    users_and_visits = (db.session.query(
+        User, db.func.count(visits.c.visitor_id)
+        .label('total'))
+        .join(ShortUrl)
+        .outerjoin(visits)
+        .filter(User.email != 'anonymous@anonymous.com')
+        .filter(ShortUrl.deleted == 0)
+        .group_by(User.user_id)
+        .order_by(db.desc('total')).all())
     if users_and_visits:
         users = []
         for user_and_visits in users_and_visits:

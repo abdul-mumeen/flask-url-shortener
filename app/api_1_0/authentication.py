@@ -13,7 +13,8 @@ basic_auth = HTTPBasicAuth()
 @api.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Headers',
+                         'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
     return response
 
@@ -21,12 +22,15 @@ def after_request(response):
 @api.before_request
 @auth.login_required
 def before_request():
+    """
+    This fun
+    """
     if request.method != 'OPTIONS':
-        allowed_anonymous_route = ['token', 'register', 'shorten',
-                                   'recent', 'popular', 'visit', 'influential']
-        if (g.current_user.is_anonymous
-                and not set(request.path.split('/'))
-                .intersection(set(allowed_anonymous_route))):
+        allowed_anonymous_routes = ['token', 'register', 'shorten', 'recent',
+                                    'popular', 'visit', 'influential']
+        is_allowed_route = set(request.path.split('/')) \
+            .intersection(set(allowed_anonymous_routes))
+        if (g.current_user.is_anonymous and not is_allowed_route):
             return unauthorized('Invalid credentials')
 
 
