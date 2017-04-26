@@ -8,7 +8,7 @@ from config import config
 moment = Moment()
 migrate = Migrate()
 db = SQLAlchemy()
-from .api_1_0 import api as api_1_0_blueprint
+from app.api_1_0 import api as api_1_0_blueprint
 
 
 def create_app(config_name):

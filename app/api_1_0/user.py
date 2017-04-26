@@ -1,9 +1,9 @@
 from flask import g, jsonify
 
 from app.models import ShortUrl, User, visits
-from . import api
-from .. import db
-from .errors import not_found
+from app.api_1_0 import api
+from app import db
+from app.api_1_0.errors import not_found
 
 
 @api.route('/user', methods=['GET'])

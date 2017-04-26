@@ -5,7 +5,7 @@ from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from . import db
+from app import db
 
 # This is a db table that keeps the many to many relationship between
 # Short URLs and their Visitors

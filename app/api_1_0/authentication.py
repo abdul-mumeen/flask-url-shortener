@@ -2,9 +2,9 @@ from flask import g, jsonify, request
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth
 
 from app.models import User
-from . import api
-from .errors import forbidden, unauthorized, bad_request
-from .validators import RegisterInputsValidator
+from app.api_1_0 import api
+from app.api_1_0.errors import forbidden, unauthorized, bad_request
+from app.api_1_0.validators import RegisterInputsValidator
 
 auth = HTTPTokenAuth(scheme='Token')
 basic_auth = HTTPBasicAuth()

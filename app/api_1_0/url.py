@@ -6,11 +6,11 @@ from flask import abort, g, jsonify, request, url_for
 from sqlalchemy import desc, func
 
 from app.models import LongUrl, ShortUrl, Visitor, visits
-from . import api
-from .. import db
-from .errors import (bad_request, forbidden, not_found, unauthorized,
-                     unavailable)
-from .validators import LongUrlValidator, ShortUrlValidator
+from app.api_1_0 import api
+from app import db
+from app.api_1_0.errors import (bad_request, forbidden, not_found,
+                                unauthorized, unavailable)
+from app.api_1_0.validators import LongUrlValidator, ShortUrlValidator
 
 dotenv.load()
 
