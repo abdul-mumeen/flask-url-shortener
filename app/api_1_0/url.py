@@ -13,10 +13,11 @@ from app.api_1_0.errors import (bad_request, forbidden, not_found,
 from app.api_1_0.validators import LongUrlValidator, ShortUrlValidator
 
 dotenv.load()
+url_prefix = dotenv.get('URL_PREFIX')
 
 
 @api.route('/shorten', methods=['POST'])
-def shorten():
+def shortenUrl():
     """
     This function accepts a json object from the request body which contains
     a URL. The URL is shortened and saved in the database returning the
@@ -32,14 +33,11 @@ def shorten():
     if search_long_url:
         short_url = search_long_url.short_urls.filter_by(
             user=g.current_user).first()
-        if short_url and request.json.get('vanity'):
-            return jsonify({'success': True,
-                            'url': short_url.get_details(),
-                            'info': 'Url shortened by you before'})
         if short_url:
-            return jsonify({'success': True,
-                            'url': short_url.get_details(),
-                            })
+            response = {'success': True, 'url': short_url.get_details()}
+            if request.json.get('vanity'):
+                response['info'] = 'Url shortened by you before'
+            return jsonify(response)
         new_short_url = get_short_url()
         return update_new_short_url(new_short_url, search_long_url)
     new_short_url = get_short_url()
@@ -89,7 +87,6 @@ def generate_short_url(len_range=5):
     len_range -- the integer value used to determine the length of the string
                  it is given a default value of 5
     """
-    url_prefix = dotenv.get('URL_PREFIX')
     new_short_url = url_prefix + ''.join(
         random.choice(string.ascii_uppercase + string.ascii_lowercase
                       + string.digits) for _ in range(len_range))
@@ -106,7 +103,6 @@ def get_short_url():
     Keyword arguments:
     vanity -- a string value that is sent through the request body
     """
-    new_short_url = None
     if request.json.get('vanity') and not g.current_user.is_anonymous:
         new_short_url = get_vanity_url(request.json.get('vanity'))
         return new_short_url
@@ -123,7 +119,6 @@ def get_vanity_url(vanity):
     Keyword arguments:
     vanity -- a string value that is sent through the request body
     """
-    url_prefix = dotenv.get('URL_PREFIX')
     full_vanity_url = url_prefix + vanity
     if ShortUrl.query.filter_by(
             short_url=full_vanity_url).filter_by(deleted=0).first():
@@ -137,14 +132,14 @@ def most_recent():
     """
     This function returns the list of most recently added shortened URLs.
     """
-    recent_urls = ShortUrl.query.order_by(
-        desc(ShortUrl.date_time)).filter_by(deleted=0).limit(10).all()
+    recent_urls = (ShortUrl.query.order_by(desc(ShortUrl.date_time))
+                   .filter_by(deleted=0).limit(10).all())
     if recent_urls:
         urls = []
         for i in range(len(recent_urls)):
             urls.append(recent_urls[i].get_details())
         return jsonify({'success': True, 'recents': urls})
-    return not_found('No url found')
+    return not_found('No recently added url found')
 
 
 @api.route('/shorturl/<int:id>/activate', methods=['PUT'])
@@ -188,12 +183,12 @@ def toggle_url_activation(id, activate_or_deactivate):
         short_url.active = endpoint_map[activate_or_deactivate]
         db.session.commit()
         return jsonify({'success': True, 'message': url_for(
-            'api.shorturls', _external=True) + str(short_url.short_url_id)})
+            'api.listShortUrls', _external=True) + str(short_url.short_url_id)})
     return unauthorized('Invalid credentials')
 
 
 @api.route('/shorturl/', methods=['GET'])
-def shorturls():
+def listShortUrls():
     """
     This function returns a collection of shortened URLs by the current user
     """
@@ -208,7 +203,7 @@ def shorturls():
 
 
 @api.route('/shorturl/<int:id>', methods=['GET', 'PUT', 'DELETE'])
-def shorturl(id):
+def retrieveUpdateDeleteShortUrl(id):
     """
     This function handles deleting, updating and getting the details of a
     short URL by mapping request method to the appropraite function.
@@ -219,8 +214,8 @@ def shorturl(id):
     request_mapping = {'GET': get_short_url_details,
                        'DELETE': delete_short_url,
                        'PUT': change_short_url_target}
-    url = ShortUrl.query.filter_by(user=g.current_user).filter_by(
-        short_url_id=id).filter_by(deleted=0).first()
+    url = (ShortUrl.query.filter_by(user=g.current_user)
+           .filter_by(short_url_id=id).filter_by(deleted=0).first())
     if not url:
         return not_found(
             "No shortened url with id '{}' found for you".format(id))
@@ -267,14 +262,14 @@ def change_short_url_target(url):
             return bad_request('A long URL is required')
         return bad_request(long_url_input.errors)
     new_long_url = request.json.get('long_url')
-    has_short_url = ShortUrl.query.filter_by(
-        user=g.current_user).filter(ShortUrl.long_url.has(
-            long_url=new_long_url)).filter_by(deleted=0).first()
+    has_short_url = (ShortUrl.query.filter_by(user=g.current_user)
+                     .filter(ShortUrl.long_url.has(long_url=new_long_url))
+                     .filter_by(deleted=0).first())
     if has_short_url:
         return forbidden("The url already has a shortened url '{}'".format(
             has_short_url.short_url))
-    count = len(ShortUrl.query.filter_by(
-        long_url=url.long_url).filter_by(deleted=0).all())
+    count = len(ShortUrl.query.filter_by(long_url=url.long_url)
+                .filter_by(deleted=0).all())
     if count <= 1:
         LongUrl.query.filter_by(long_url=url.long_url.long_url).delete()
     new_long_url_check = LongUrl.query.filter_by(long_url=new_long_url).first()
@@ -318,8 +313,9 @@ def visitors(id):
     Keyword arguments:
     id -- the integer value identifying the URL
     """
-    if ShortUrl.query.filter_by(short_url_id=id).filter_by(
-            user=g.current_user).filter_by(deleted=0).first():
+    if (ShortUrl.query.filter_by(short_url_id=id)
+        .filter_by(user=g.current_user)
+            .filter_by(deleted=0).first()):
         visitors = Visitor.query.filter(
             Visitor.short_urls.any(short_url_id=id)).all()
         if visitors:
@@ -380,20 +376,7 @@ def visit():
     elif not short_url_details.active:
         return unavailable('URL has been deactivated')
     else:
-        add_visit(short_url_details)
+        new_visitor = Visitor()
+        new_visitor.add_visit(short_url_details)
         return jsonify(
             {'success': True, 'long_url': short_url_details.long_url.long_url})
-
-
-def add_visit(url):
-    """
-    This function adds the visit details of the URL supplied.
-
-    Keyword arguments:
-    url -- the shortened URL visited by the visitor.
-    """
-    agent = request.user_agent
-    visitor = Visitor(ip_address=request.remote_addr,
-                      browser=agent.browser, platform=agent.platform)
-    visitor.short_urls.append(url)
-    visitor.save()

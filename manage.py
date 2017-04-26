@@ -16,7 +16,7 @@ manager = Manager(app)
 
 def make_shell_context():
     """
-    This function make the model, database and app available in the shell
+    This function makes the model, database and app available in the shell
     context
     """
     return dict(app=app, db=db, User=User, ShortUrl=ShortUrl,

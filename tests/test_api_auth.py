@@ -6,6 +6,7 @@ from flask import url_for
 
 from app import create_app, db
 from app.models import User
+from util import jsonify_user_data
 
 
 class ApiAuthTestCase(unittest.TestCase):
@@ -19,6 +20,7 @@ class ApiAuthTestCase(unittest.TestCase):
         self.app_context.push()
         db.create_all()
         self.client = self.app.test_client(use_cookies=True)
+        self.headers = {'Content-Type': 'application/json'}
 
     def tearDown(self):
         """
@@ -83,14 +85,11 @@ class ApiAuthTestCase(unittest.TestCase):
         This function tests the response from registering a user with
         complete and valid user information.
         """
-        user_data = {'email': 'me@andela.com', 'first_name': 'Adedoyin',
-                     'last_name': 'Fujitsu', 'password': 'prank',
-                     'confirm_password': 'prank'
-                     }
-        header = {'Content-Type': 'application/json'}
-
+        user_data = jsonify_user_data(
+            'Adedoyin', 'Fujitsu', 'me@andela.com', 'prank', 'prank')
         response = self.client.post(url_for('api.register_user'),
-                                    data=json.dumps(user_data), headers=header)
+                                    data=json.dumps(user_data),
+                                    headers=self.headers)
         message = json.loads(response.data)['message']
         self.assertEqual(message, 'User creation successful')
         self.assertEqual(response.status_code, 201)
@@ -100,14 +99,11 @@ class ApiAuthTestCase(unittest.TestCase):
         This function tests the response from registering a user with
         missing user information.
         """
-        user_data = {'email': 'me@andela.com', 'first_name': 'Adedoyin',
-                     'last_name': '', 'password': 'prank',
-                     'confirm_password': 'prank'
-                     }
-        header = {'Content-Type': 'application/json'}
-
+        user_data = jsonify_user_data(
+            'Adedoyin', '', 'me@andela.com', 'prank', 'prank')
         response = self.client.post(url_for('api.register_user'),
-                                    data=json.dumps(user_data), headers=header)
+                                    data=json.dumps(user_data),
+                                    headers=self.headers)
         message = json.loads(response.data)['message']
         self.assertIn('All entities first_name, last_name, email, password,'
                       ' confirm_password are required', message)
@@ -118,14 +114,11 @@ class ApiAuthTestCase(unittest.TestCase):
         This function tests the response from registering a user with
         complete but invalid email address.
         """
-        user_data = {'email': 'meandela.com', 'first_name': 'Adedoyin',
-                     'last_name': 'Fujitsu', 'password': 'prank',
-                     'confirm_password': 'prank'
-                     }
-        header = {'Content-Type': 'application/json'}
-
+        user_data = jsonify_user_data(
+            'Adedoyin', 'Fujitsu', 'meandela.com', 'prank', 'prank')
         response = self.client.post(url_for('api.register_user'),
-                                    data=json.dumps(user_data), headers=header)
+                                    data=json.dumps(user_data),
+                                    headers=self.headers)
         message = json.loads(response.data)['message']
         self.assertIn('Invalid email address.', message)
         self.assertEqual(response.status_code, 400)
@@ -135,14 +128,11 @@ class ApiAuthTestCase(unittest.TestCase):
         This function tests the response from registering a user with
         complete but not matching passwords.
         """
-        user_data = {'email': 'me@andela.com', 'first_name': 'Adedoyin',
-                     'last_name': 'Fujitsu', 'password': 'prak',
-                     'confirm_password': 'prank'
-                     }
-        header = {'Content-Type': 'application/json'}
-
+        user_data = jsonify_user_data(
+            'Adedoyin', 'Fujitsu', 'me@andela.com', 'prak', 'prank')
         response = self.client.post(url_for('api.register_user'),
-                                    data=json.dumps(user_data), headers=header)
+                                    data=json.dumps(user_data),
+                                    headers=self.headers)
         message = json.loads(response.data)['message']
         self.assertIn('Password must match', message)
         self.assertEqual(response.status_code, 400)
@@ -152,16 +142,14 @@ class ApiAuthTestCase(unittest.TestCase):
         This function tests the response from registering a user with
         existing email address.
         """
-        user_data = {'email': 'me@andela.com', 'first_name': 'Adedoyin',
-                     'last_name': 'Fujitsu', 'password': 'prank',
-                     'confirm_password': 'prank'
-                     }
-        header = {'Content-Type': 'application/json'}
-
+        user_data = jsonify_user_data(
+            'Adedoyin', 'Fujitsu', 'me@andela.com', 'prank', 'prank')
         response = self.client.post(url_for('api.register_user'),
-                                    data=json.dumps(user_data), headers=header)
+                                    data=json.dumps(user_data),
+                                    headers=self.headers)
         response = self.client.post(url_for('api.register_user'),
-                                    data=json.dumps(user_data), headers=header)
+                                    data=json.dumps(user_data),
+                                    headers=self.headers)
         message = json.loads(response.data)['message']
         self.assertIn('Email already exist', message)
         self.assertEqual(response.status_code, 403)

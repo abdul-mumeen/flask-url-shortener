@@ -95,7 +95,7 @@ class UserDetailHelper(object):
         data = json.dumps({'long_url': url,
                            'vanity': vanity})
         headers = {'Content-Type': 'application/json'}
-        response = self.client.post(url_for('api.shorten'),
+        response = self.client.post(url_for('api.shortenUrl'),
                                     data=data, headers=headers)
         return json.loads(response.data)
 
@@ -111,6 +111,13 @@ class UserDetailHelper(object):
         """
         data = json.dumps({'long_url': url, 'vanity': vanity})
         headers = self.get_token_headers(self.get_token(email, password))
-        response = self.client.post(url_for('api.shorten'),
+        response = self.client.post(url_for('api.shortenUrl'),
                                     data=data, headers=headers)
         return json.loads(response.data)
+
+
+def jsonify_user_data(first_name, last_name, email, password, c_password):
+    return {'email': email, 'first_name': first_name,
+            'last_name': last_name, 'password': password,
+            'confirm_password': c_password
+            }

@@ -164,7 +164,7 @@ class UrlTestCase(unittest.TestCase):
         """
         response = self.uh.client.get(url_for('api.most_recent'))
         message = json.loads(response.data)['message']
-        self.assertEqual(message, 'No url found')
+        self.assertEqual(message, 'No recently added url found')
         self.assertEqual(response.status_code, 404)
         self.uh.register_user('Abdul-Mumeen', 'Olasode',
                               'abdulmumeen.olasode@andela.com', 'hassan')
@@ -241,7 +241,7 @@ class UrlTestCase(unittest.TestCase):
         headers = self.uh.get_token_headers(
             self.uh.get_token('angular@node.com', 'python'))
         response = self.uh.client.get(
-            url_for('api.shorturl', id=1), headers=headers)
+            url_for('api.retrieveUpdateDeleteShortUrl', id=1), headers=headers)
         url_details = json.loads(response.data)['url']
         self.assertEqual(url_details['short_url_url'], short_url_url)
         self.assertEqual(url_details['short_url'], short_url)
@@ -259,7 +259,7 @@ class UrlTestCase(unittest.TestCase):
         headers = self.uh.get_token_headers(
             self.uh.get_token('flask@django.com', 'numpy'))
         response = self.uh.client.get(
-            url_for('api.shorturl', id=1), headers=headers)
+            url_for('api.retrieveUpdateDeleteShortUrl', id=1), headers=headers)
         self.assertEqual("No shortened url with id '1' found for you",
                          json.loads(response.data)['message'])
         self.assertEqual(response.status_code, 404)
@@ -273,13 +273,13 @@ class UrlTestCase(unittest.TestCase):
         headers = self.uh.get_token_headers(
             self.uh.get_token('flask@django.com', 'numpy'))
         response = self.uh.client.get(
-            url_for('api.shorturls'), headers=headers)
+            url_for('api.listShortUrls'), headers=headers)
         self.assertEqual(json.loads(response.data)[
                          'message'], 'No shortened url found')
         response = self.uh.user_shorten_url('https://www.google.com', '',
                                             'flask@django.com', 'numpy')
         response = self.uh.client.get(
-            url_for('api.shorturls'), headers=headers)
+            url_for('api.listShortUrls'), headers=headers)
         self.assertTrue(type(json.loads(response.data)['urls']) == list)
         self.assertEqual(json.loads(response.data)[
                          'urls'][0]['long_url'],
@@ -295,14 +295,14 @@ class UrlTestCase(unittest.TestCase):
         headers = self.uh.get_token_headers(
             self.uh.get_token('angular@node.com', 'python'))
         response = self.uh.client.get(
-            url_for('api.shorturl', id=1), headers=headers)
+            url_for('api.retrieveUpdateDeleteShortUrl', id=1), headers=headers)
         url_details = json.loads(response.data)['url']
         self.assertEqual(url_details['long_url'], 'https://www.google.com')
         response = self.uh.client.delete(
-            url_for('api.shorturl', id=1), headers=headers)
+            url_for('api.retrieveUpdateDeleteShortUrl', id=1), headers=headers)
         self.assertEqual(response.status_code, 200)
         response = self.uh.client.get(
-            url_for('api.shorturl', id=1), headers=headers)
+            url_for('api.retrieveUpdateDeleteShortUrl', id=1), headers=headers)
         message = json.loads(response.data)['message']
         self.assertEqual(message, "No shortened url with id '1' found for you")
         self.assertEqual(response.status_code, 404)
@@ -332,9 +332,10 @@ class UrlTestCase(unittest.TestCase):
         response = self.uh.user_shorten_url('https://www.google.com', '',
                                             'flask@django.com', 'numpy')
         response = self.uh.client.delete(
-            url_for('api.shorturl', id=1), headers=headers)
+            url_for('api.retrieveUpdateDeleteShortUrl', id=1), headers=headers)
         response = self.uh.client.get(
-            url_for('api.shorturl', id=2), headers=headers_2)
+            url_for('api.retrieveUpdateDeleteShortUrl', id=2),
+            headers=headers_2)
         url_details = json.loads(response.data)['url']
         self.assertEqual(url_details['long_url'], 'https://www.google.com')
 
@@ -350,12 +351,14 @@ class UrlTestCase(unittest.TestCase):
             self.uh.get_token('angular@node.com', 'python'))
         data = json.dumps({'long_url': ''})
         response = self.uh.client.put(
-            url_for('api.shorturl', id=1), headers=headers, data=data)
+            url_for('api.retrieveUpdateDeleteShortUrl', id=1),
+            headers=headers, data=data)
         message = json.loads(response.data)['message']
         self.assertIn('A long URL is required', message)
         data = json.dumps({'long_url': 'https://www.facebook.com'})
         response = self.uh.client.put(
-            url_for('api.shorturl', id=1), headers=headers, data=data)
+            url_for('api.retrieveUpdateDeleteShortUrl', id=1),
+            headers=headers, data=data)
         message = json.loads(response.data)['message']
         self.assertEqual('updated', message)
         self.assertEqual(response.status_code, 200)
@@ -366,7 +369,8 @@ class UrlTestCase(unittest.TestCase):
                                             'flask@django.com', 'numpy')
         data = json.dumps({'long_url': 'https://www.google.com'})
         response = self.uh.client.put(
-            url_for('api.shorturl', id=1), headers=headers, data=data)
+            url_for('api.retrieveUpdateDeleteShortUrl', id=1),
+            headers=headers, data=data)
         message = json.loads(response.data)['message']
         self.assertEqual('updated', message)
 
@@ -385,7 +389,8 @@ class UrlTestCase(unittest.TestCase):
             self.uh.get_token('angular@node.com', 'python'))
         data = json.dumps({'long_url': 'https://www.facebook.com'})
         response = self.uh.client.put(
-            url_for('api.shorturl', id=1), headers=headers, data=data)
+            url_for('api.retrieveUpdateDeleteShortUrl', id=1),
+            headers=headers, data=data)
         message = json.loads(response.data)['message']
         self.assertEqual(
             message,

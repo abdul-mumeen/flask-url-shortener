@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import current_app, url_for
+from flask import current_app, request, url_for
 from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -82,7 +82,7 @@ class User(UserMixin, db.Model):
             'last_name': self.last_name,
             'email': self.email,
             'short_urls': [
-                url_for('api.shorturls', _external=True) +
+                url_for('api.listShortUrls', _external=True) +
                 str(short_url.short_url_id)
                 for short_url in self.short_urls
             ]}
@@ -96,7 +96,7 @@ class User(UserMixin, db.Model):
 class ShortUrl(db.Model):
     """
     This is the short url which has a many to many relationship with the
-    Visitor model and a many to one to the User model.
+    Visitor model and a many to one with the User model.
     """
     __tablename__ = 'short_urls'
     short_url_id = db.Column(db.Integer, primary_key=True)
@@ -122,7 +122,7 @@ class ShortUrl(db.Model):
         url_details = {
             'short_url': self.short_url,
             'short_url_url': url_for(
-                'api.shorturl', id=self.short_url_id, _external=True),
+                'api.retrieveUpdateDeleteShortUrl', id=self.short_url_id, _external=True),
             'long_url': self.long_url.long_url,
             'number_of_visits': no_of_visits,
             'visitors': [
@@ -178,6 +178,20 @@ class Visitor(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def add_visit(self, url):
+        """
+        This function adds the visit details of the URL supplied.
+
+        Keyword arguments:
+        url -- the shortened URL visited by the visitor.
+        """
+        agent = request.user_agent
+        self.ip_address = request.remote_addr
+        self.browser = agent.browser
+        self.platform = agent.platform
+        self.short_urls.append(url)
+        self.save()
+
     def get_details(self):
         # This function returns a visitor's details as a json object
         details = {
@@ -185,7 +199,7 @@ class Visitor(db.Model):
             'browser': self.browser,
             'platform': self.platform,
             'short_urls': [
-                url_for('api.shorturls', _external=True) +
+                url_for('api.listShortUrls', _external=True) +
                 str(short_url.short_url_id)
                 for short_url in self.short_urls
             ]
